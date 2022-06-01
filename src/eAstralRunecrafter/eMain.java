@@ -71,9 +71,9 @@ public class eMain extends Script{
     @Override
     public void onProcess() {
         if (EDGE.containsPoint(ctx.players.getLocal().getLocation()) || DONOR.containsPoint(ctx.players.getLocal().getLocation()))   {
-            if (ctx.inventory.populate().filter(7936) == null) {
+            if (ctx.inventory.populate().filter(7936).population() == 0) {
                 status = "Searching for bank";
-                if (ctx.objects.populate().filter(banks).nextNearest() != null) {
+                if (ctx.objects.populate().filter("Bank booth").nextNearest() != null) {
                     status = "Bank found (object)";
                     SimpleObject bank = ctx.objects.populate().filter(banks).nextNearest();
                     if (bank != null && bank.validateInteractable()) {
@@ -83,7 +83,7 @@ public class eMain extends Script{
                 } else {
                     status = "Bank not found";
                 }
-            } else if (ctx.inventory.populate().filter(7936) != null) {
+            } else if (ctx.inventory.populate().filter(7936).population() != 0) {
                 if (!teleporter.opened()) {
                     ctx.magic.castSpellOnce("Monsters Teleport");
                 } else {
@@ -94,14 +94,14 @@ public class eMain extends Script{
             }
 
         } else if (ASTRAL.containsPoint(ctx.players.getLocal().getLocation())) {
-            if (ctx.inventory.populate().filter(7936) != null) {
+            if (ctx.inventory.populate().filter(7936).population() == 0) {
+                ctx.magic.castSpellOnce("Home Teleport");
+            } else {
                 SimpleObject altar = ctx.objects.populate().filter(34771).nextNearest();
                 if (altar != null && altar.validateInteractable()) {
                     altar.click("Craft-rune", "Altar");
-                    ctx.onCondition(() -> ctx.players.getLocal().getAnimation() == 791, 800);
+                    //ctx.onCondition(() -> ctx.inventory.populate().filter(9075) != null, 1200);
                 }
-            } else {
-                ctx.magic.castSpellOnce("Home Teleport");
             }
         } else {
             ctx.stopScript();
