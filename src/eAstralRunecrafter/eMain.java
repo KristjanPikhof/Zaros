@@ -20,18 +20,7 @@ import simple.robot.utils.WorldArea;
         name = "eAstralRunecrafter", servers = { "Zaros" }, version = "1")
 
 public class eMain extends Script{
-
-    private final WorldPoint START_TILE = new WorldPoint(3214, 2798, 0);
-    private final WorldPoint SECOND_TILE = new WorldPoint(3214, 2801, 1);
-    private final WorldPoint THIRD_TILE = new WorldPoint(3231, 2803, 1);
-    private final WorldPoint FOURTH_TILE = new WorldPoint(3253, 2808, 1);
-    private final WorldPoint FIFTH_TILE = new WorldPoint(3255, 2802, 1);
-    private final WorldPoint SIXT_TILE = new WorldPoint(3262, 2791, 3);
-    private final WorldPoint SEVENTH_TILE = new WorldPoint(3262, 2787, 3);
-    private final WorldPoint SEVENTH_TILE2 = new WorldPoint(3262, 2783, 3);
-    private final WorldPoint EIGHT_TILE = new WorldPoint(3257, 2781, 1);
-    private final WorldPoint LAST_TILE = new WorldPoint(3251, 2781, 0);
-    private final WorldArea EDGE = new WorldArea(new WorldPoint(33072, 3507, 0), new WorldPoint(3111, 3464, 0));
+    private final WorldArea EDGE = new WorldArea(new WorldPoint(3072, 3507, 0), new WorldPoint(3111, 3464, 0));
     private final WorldArea DONOR = new WorldArea(new WorldPoint(1386, 8896, 0), new WorldPoint(1367, 9008, 0));
     private final WorldArea ASTRAL = new WorldArea(new WorldPoint(2137, 3875, 0), new WorldPoint(2170, 3846, 0));
 
@@ -40,31 +29,29 @@ public class eMain extends Script{
     private Teleporter teleporter;
 
     private long startTime = 0L;
-    private long startingRUNECRAFTINGLevel;
-    private long startingRUNECRAFTINGExp;
+    private long startingSkillLevel;
+    private long startingSkillExp;
     private int count;
     static String status = null;
-    static int enter = KeyEvent.VK_ENTER;
-    static int space = KeyEvent.VK_SPACE;
 
-    static String[] banks = {"Bank chest", "Bank booth"};
-    static String[] bankers = {"Emerald Benedict", "Banker"};
+    //static String[] banks = {"Bank chest", "Bank booth"};
+    //static String[] bankers = {"Emerald Benedict", "Banker"};
 
 
     @Override
     public void onExecute() {
-        System.out.println("Started eAstralRunecrafter Pro!");
+        System.out.println("Started eAstralRunecrafter!");
         this.teleporter = new Teleporter(ctx);
         this.startTime = System.currentTimeMillis(); //paint
-        this.startingRUNECRAFTINGLevel = this.ctx.skills.realLevel(SimpleSkills.Skills.RUNECRAFT);
-        this.startingRUNECRAFTINGExp = this.ctx.skills.experience(SimpleSkills.Skills.RUNECRAFT);
+        this.startingSkillLevel = this.ctx.skills.realLevel(SimpleSkills.Skills.RUNECRAFT);
+        this.startingSkillExp = this.ctx.skills.experience(SimpleSkills.Skills.RUNECRAFT);
 
         count = 0;
 
 
-        this.ctx.updateStatus("--------------------------");
-        this.ctx.updateStatus("  eAstralRunecrafter Pro  ");
-        this.ctx.updateStatus("--------------------------");
+        this.ctx.updateStatus("----------------------");
+        this.ctx.updateStatus("  eAstralRunecrafter  ");
+        this.ctx.updateStatus("----------------------");
         //ctx.keyboard.sendKeys("::home");
     }
 
@@ -72,21 +59,20 @@ public class eMain extends Script{
     public void onProcess() {
         if (EDGE.containsPoint(ctx.players.getLocal().getLocation()) || DONOR.containsPoint(ctx.players.getLocal().getLocation()))   {
             if (ctx.inventory.populate().filter(7936).population() == 0) {
-                status = "Searching for bank";
-                if (ctx.objects.populate().filter("Bank booth").nextNearest() != null) {
-                    status = "Bank found (object)";
-                    SimpleObject bank = ctx.objects.populate().filter(banks).nextNearest();
-                    if (bank != null && bank.validateInteractable()) {
-                        bank.click("Last-preset");
-                        ctx.sleepCondition(() -> ctx.pathing.inMotion(), 800);
-                    }
-                } else {
-                    status = "Bank not found";
-                }
-            } else if (ctx.inventory.populate().filter(7936).population() != 0) {
+                    status = "Bank found";
+                    SimpleObject bank = ctx.objects.populate().filter("Bank booth").nextNearest();
+                        if (bank != null && bank.validateInteractable()) {
+                            status = "Getting last-preset";
+                            bank.click("Last-preset", "Bank booth");
+                            ctx.sleepCondition(() -> ctx.pathing.inMotion(), 1200);
+                        }
+
+            } else {
+                status = "Teleporting to altar";
                 if (!teleporter.opened()) {
                     ctx.magic.castSpellOnce("Monsters Teleport");
                 } else {
+                    status = "Browsing favorites for altar";
                     teleporter.teleportStringPath("Favorites", "Runecrafting: Astral Altar");
                     ctx.onCondition(() -> ASTRAL.containsPoint(ctx.players.getLocal().getLocation()), 2400);
                     count++;
@@ -95,15 +81,20 @@ public class eMain extends Script{
 
         } else if (ASTRAL.containsPoint(ctx.players.getLocal().getLocation())) {
             if (ctx.inventory.populate().filter(7936).population() == 0) {
+                status = "Teleporting to home";
                 ctx.magic.castSpellOnce("Home Teleport");
             } else {
+                status = "Searching for altar";
                 SimpleObject altar = ctx.objects.populate().filter(34771).nextNearest();
                 if (altar != null && altar.validateInteractable()) {
+                    status = "Crafting runes";
                     altar.click("Craft-rune", "Altar");
-                    //ctx.onCondition(() -> ctx.inventory.populate().filter(9075) != null, 1200);
+                    ctx.sleepCondition(() -> ctx.pathing.inMotion(), 1200);
                 }
             }
         } else {
+            status = "Out of area!";
+            ctx.sleep(3000);
             ctx.stopScript();
             ctx.sendLogout();
         }
@@ -111,8 +102,8 @@ public class eMain extends Script{
 
     @Override
     public void onTerminate() {
-        this.startingRUNECRAFTINGLevel = 0L;
-        this.startingRUNECRAFTINGExp = 0L;
+        this.startingSkillLevel = 0L;
+        this.startingSkillExp = 0L;
         this.count = 0;
 
         this.ctx.updateStatus("----------------------");
@@ -129,23 +120,24 @@ public class eMain extends Script{
         Color PhilippineRed = new Color(196, 18, 48);
         Color RaisinBlack = new Color(35, 31, 32, 127);
         g.setColor(RaisinBlack);
-        g.fillRect(5, 120, 200, 95);
+        g.fillRect(5, 120, 200, 110);
         g.setColor(PhilippineRed);
-        g.drawRect(5, 120, 200, 95);
+        g.drawRect(5, 120, 200, 110);
         g.setColor(PhilippineRed);
         g.drawString("eAstralRunecrafter by Esmaabi", 15, 135);
         g.setColor(Color.WHITE);
         long runTime = System.currentTimeMillis() - this.startTime;
-        long currentRUNECRAFTINGLevel = this.ctx.skills.realLevel(SimpleSkills.Skills.RUNECRAFT);
-        long currentRUNECRAFTINGExp = this.ctx.skills.experience(SimpleSkills.Skills.RUNECRAFT);
-        long RUNECRAFTINGLevelsGained = currentRUNECRAFTINGLevel - this.startingRUNECRAFTINGLevel;
-        long RUNECRAFTINGExpGained = currentRUNECRAFTINGExp - this.startingRUNECRAFTINGExp;
-        long RUNECRAFTINGexpPhour = (int)((RUNECRAFTINGExpGained * 3600000D) / runTime);
+        long currentSkillLevel = this.ctx.skills.realLevel(SimpleSkills.Skills.RUNECRAFT);
+        long currentSkillExp = this.ctx.skills.experience(SimpleSkills.Skills.RUNECRAFT);
+        long SkillLevelsGained = currentSkillLevel - this.startingSkillLevel;
+        long SkillExpGained = currentSkillExp - this.startingSkillExp;
+        long SkillexpPhour = (int)((SkillExpGained * 3600000D) / runTime);
         g.drawString("Runtime: " + formatTime(runTime), 15, 150);
-        g.drawString("Starting Level: " + this.startingRUNECRAFTINGLevel + " (+" + RUNECRAFTINGLevelsGained + ")", 15, 165);
-        g.drawString("Current Level: " + currentRUNECRAFTINGLevel, 15, 180);
-        g.drawString("Exp gained: " + RUNECRAFTINGExpGained + " (" + (RUNECRAFTINGexpPhour / 1000L) + "k" + " xp/h)", 15, 195);
+        g.drawString("Starting Level: " + this.startingSkillLevel + " (+" + SkillLevelsGained + ")", 15, 165);
+        g.drawString("Current Level: " + currentSkillLevel, 15, 180);
+        g.drawString("Exp gained: " + SkillExpGained + " (" + (SkillexpPhour / 1000L) + "k" + " xp/h)", 15, 195);
         g.drawString("Runs completed: " + count + " time(s)", 15, 210);
+        g.drawString("Status: " + status, 15, 225);
 
 
     }
