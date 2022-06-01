@@ -20,22 +20,18 @@ import simple.robot.utils.WorldArea;
         name = "eAstralRunecrafter", servers = { "Zaros" }, version = "1")
 
 public class eMain extends Script{
+    //coordinates
     private final WorldArea EDGE = new WorldArea(new WorldPoint(3072, 3507, 0), new WorldPoint(3111, 3464, 0));
     private final WorldArea DONOR = new WorldArea(new WorldPoint(1386, 8896, 0), new WorldPoint(1367, 9008, 0));
     private final WorldArea ASTRAL = new WorldArea(new WorldPoint(2137, 3875, 0), new WorldPoint(2170, 3846, 0));
 
-
-
+    //vars
     private Teleporter teleporter;
-
     private long startTime = 0L;
     private long startingSkillLevel;
     private long startingSkillExp;
     private int count;
     static String status = null;
-
-    //static String[] banks = {"Bank chest", "Bank booth"};
-    //static String[] bankers = {"Emerald Benedict", "Banker"};
 
 
     @Override
@@ -45,14 +41,12 @@ public class eMain extends Script{
         this.startTime = System.currentTimeMillis(); //paint
         this.startingSkillLevel = this.ctx.skills.realLevel(SimpleSkills.Skills.RUNECRAFT);
         this.startingSkillExp = this.ctx.skills.experience(SimpleSkills.Skills.RUNECRAFT);
-
         count = 0;
-
 
         this.ctx.updateStatus("----------------------");
         this.ctx.updateStatus("  eAstralRunecrafter  ");
         this.ctx.updateStatus("----------------------");
-        //ctx.keyboard.sendKeys("::home");
+
     }
 
     @Override
@@ -66,7 +60,6 @@ public class eMain extends Script{
                             bank.click("Last-preset", "Bank booth");
                             ctx.sleepCondition(() -> ctx.pathing.inMotion(), 1200);
                         }
-
             } else {
                 status = "Teleporting to altar";
                 if (!teleporter.opened()) {
@@ -138,8 +131,6 @@ public class eMain extends Script{
         g.drawString("Exp gained: " + SkillExpGained + " (" + (SkillexpPhour / 1000L) + "k" + " xp/h)", 15, 195);
         g.drawString("Runs completed: " + count + " time(s)", 15, 210);
         g.drawString("Status: " + status, 15, 225);
-
-
     }
 
     private String formatTime(long ms) {
