@@ -88,7 +88,7 @@ public class KillTask extends TaskScript implements LoopingScript{
         int vertical = 312;
         g.drawRect(0, 300, 150, 125);
         g.setColor(Color.BLACK);
-        g.drawString("Overload - Jad Slayer", horizontal + 5, vertical + 15);
+        g.drawString("Overload - Jad Slayer -> rework Esmaabi", horizontal + 5, vertical + 15);
         g.drawString("Uptime: " + this.ctx.paint.formatTime(this.UPTIME), horizontal + 2, vertical + 30);
         g.drawString("Jads Killed: " + jadKilled, horizontal, vertical + 45);
         g.setColor(Color.RED);
@@ -109,6 +109,8 @@ public class KillTask extends TaskScript implements LoopingScript{
 
         // Adds our tasks to our {task} list for execution
         tasks.addAll(Arrays.asList(new BankTask(ctx)));
+
+        playerState = State.BANKING;
 
         try {
             backgroundImage = ImageIO.read(KillTask.class.getResourceAsStream("parchment.png"));
@@ -136,36 +138,28 @@ public class KillTask extends TaskScript implements LoopingScript{
         if (playerState == State.EXCHANGE_CAPES) {
             ctx.updateStatus("Started");
             exchangeCapes();
-        }
-
-        if (jad == null && ctx.players.getLocal().getLocation().getRegionID() == 9808 && playerState != State.BANKING && playerState != null && playerState != State.EXCHANGE_CAPES) {
+        } else if (jad == null && ctx.players.getLocal().getLocation().getRegionID() == 9808 && playerState != State.BANKING && playerState != null && playerState != State.EXCHANGE_CAPES) {
             playerState = State.BANKING;
-        }
-
-        if (playerState == State.BANKING) {
+        } else if (playerState == State.BANKING) {
             ctx.updateStatus("Banking State detected. Disabling active prayers.");
             disablePrayers();
+        } else if (playerState == State.PRAYERS) {
+            //Fighting jad
+            SimpleEntityQuery<SimpleNpc> bossEnemyDetect = ctx.npcs.populate().filter("Tztok-Jad").filter(n -> n.getInteracting() != null && n.getInteracting().getName().equals(ctx.players.getLocal().getName()));
+            jad = bossEnemyDetect.next();
+                attackJad();
+        } else if (jad.getHealthRatio() == 0) {
+            jadDeathDetect();
+        } else if (ctx.combat.health() == 0) {
+            playerDeathDetect();
         }
-
-        //Fighting jad
-        SimpleEntityQuery<SimpleNpc> bossEnemyDetect = ctx.npcs.populate().filter("Tztok-Jad").filter(n -> n.getInteracting() != null && n.getInteracting().getName().equals(ctx.players.getLocal().getName()));
-        jad = bossEnemyDetect.next();
-
-        if (playerState == State.PRAYERS)
-        {
-            attackJad();
-        }
-
-        jadDeathDetect();
-        playerDeathDetect();
-
     }
 
     private void playerDeathDetect() {
 
         if (ctx.combat.health() == 0) {
             playerDeath++;
-            ctx.updateStatus("Player has died, reinitiating banking functions.");
+            ctx.updateStatus("Player has died, starting banking functions.");
             ctx.sleepCondition(() -> ctx.combat.health() > 0, 6000); // Wait until respawn
             disablePrayers();
             playerState = State.BANKING;
@@ -203,8 +197,7 @@ public class KillTask extends TaskScript implements LoopingScript{
         String[] restores = { "restore", "sanfew", "prayer" };
         SimpleItem restore = getItem(restores);
 
-        if (ctx.prayers.points() <= 10 && restore != null)
-        {
+        if (ctx.prayers.points() <= 15 && restore != null) {
             ctx.updateStatus("Restoring prayer.");
             restore.click("Drink");
         }
@@ -215,8 +208,7 @@ public class KillTask extends TaskScript implements LoopingScript{
         String[] defPotItems = { "Super defence", "defence" };
         SimpleItem defencePotion = getItem(defPotItems);
 
-        if (ctx.skills.level(Skills.RANGED) <= 108 && rangePotion != null && ctx.skills.realLevel(Skills.RANGED) == 99 )
-        {
+        if (ctx.skills.level(Skills.RANGED) <= 108 && rangePotion != null && ctx.skills.realLevel(Skills.RANGED) == 99 ) {
             ctx.updateStatus("Sipping ranging potion.");
             rangePotion.click("Drink");
         }
@@ -245,33 +237,37 @@ public class KillTask extends TaskScript implements LoopingScript{
                     protectFromMagic();
                     attackHealers();
                     eatTask();
+                    specialAttack();
                     prayerFlick();
                     refocusJad();
                     distanceCheck();
-                    specialAttack();
+                    //specialAttack();
                     ctx.viewport.turnTo(jad);
                     break;
                 case 2652:
                     protectFromRange();
                     attackHealers();
                     eatTask();
+                    specialAttack();
                     prayerFlick();
                     refocusJad();
                     distanceCheck();
-                    specialAttack();
+                    //specialAttack();
                     ctx.viewport.turnTo(jad);
                     break;
                 case 2655:
                     protectFromMelee();
                     distanceSelfFromBoss();
-                    prayerFlick();
                     specialAttack();
+                    prayerFlick();
+                    //specialAttack();
                     ctx.viewport.turnTo(jad);
                     break;
 
                 default:
                     prayerFlick();
                     distanceSelfFromBoss();
+                    specialAttack();
 
             }
         }
@@ -328,10 +324,10 @@ public class KillTask extends TaskScript implements LoopingScript{
 
         //if healers are not interacting with jad && the player is NOT interacting with the healers A&& not interacting with Jad, attack jad instead.
         //OR if player isn't already interacting with jad && the healers are null, attack jad.
-        if (healerInteractingWithJad == null && playerInteractingWithHealer == null && playerInteractingWithJad == null && ctx.npcs.populate().filter("Yt-HurKot").nearest().next() == null|| playerInteractingWithJad == null && ctx.npcs.populate().filter("Yt-HurKot").nearest().next() == null && ctx.pathing.inMotion() == false)
-        {
-            if (jad.validateInteractable())
-            {
+        if (healerInteractingWithJad == null && playerInteractingWithHealer == null && playerInteractingWithJad == null
+                && ctx.npcs.populate().filter("Yt-HurKot").nearest().next() == null || playerInteractingWithJad == null
+                && ctx.npcs.populate().filter("Yt-HurKot").nearest().next() == null && ctx.pathing.inMotion() == false) {
+            if (jad.validateInteractable()) {
                 ctx.updateStatus("Refocusing on jad. Left clicking now.");
                 jad.click("attack");
             }
@@ -359,8 +355,7 @@ public class KillTask extends TaskScript implements LoopingScript{
         teleporter.teleportStringPath(name, subname);
     }
 
-    public void disablePrayers()
-    {
+    public void disablePrayers() {
         ctx.updateStatus("Disabling prayers");
         ctx.prayers.prayer(Prayers.PROTECT_FROM_MAGIC, false);
         ctx.prayers.prayer(Prayers.PROTECT_FROM_MISSILES, false);
