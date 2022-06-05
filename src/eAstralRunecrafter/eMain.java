@@ -63,10 +63,10 @@ public class eMain extends Script{
             } else {
                 status = "Teleporting to altar";
                 if (!teleporter.opened()) {
-                    ctx.magic.castSpellOnce("Monsters Teleport");
+                    ctx.magic.castSpellOnce("Minigame Teleport");
                 } else {
-                    status = "Browsing favorites for altar";
-                    teleporter.teleportStringPath("Favorites", "Runecrafting: Astral Altar");
+                    status = "Browsing for altar teleport";
+                    teleporter.teleportStringPath("Skilling", "Runecrafting: Astral Altar");
                     ctx.onCondition(() -> ASTRAL.containsPoint(ctx.players.getLocal().getLocation()), 2400);
                     count++;
                 }
