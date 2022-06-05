@@ -14,7 +14,7 @@ public class ExchangeTask extends WindowAdapter {
     {
         String[] buttons = { "Jad Slayer", "Cape Exchange" };
 
-        ImageIcon overloadIcon = new ImageIcon(ExchangeTask.class.getResource("overload2.png"));
+        ImageIcon overloadIcon = new ImageIcon(ExchangeTask.class.getResource("TzTok-Jad-logo.png"));
         /*
          * Image resizedJad = jadIcon.getImage(); Image scaledImage =
          * resizedJad.getScaledInstance(100, 100, Image.SCALE_DEFAULT); Icon scaledIcon
