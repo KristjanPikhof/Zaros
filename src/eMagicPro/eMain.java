@@ -3,6 +3,7 @@ package eMagicPro;
 import java.awt.Color;
 import java.awt.Graphics;
 
+import eJadSlayer.ExchangeTask;
 import net.runelite.api.ChatMessageType;
 import simple.hooks.filters.SimpleSkills;
 import simple.hooks.scripts.Category;
@@ -14,7 +15,7 @@ import simple.robot.script.Script;
 
 
 @ScriptManifest(author = "Esmaabi", category = Category.MAGIC, description = "Magic training bot for fast AFK magic xp.<br> You must have required runes and target nearby. Scrip will start splashing target and alching specific item. <br> Choose spell you want to auto attack, have auto retaliate activated and required alching supplies in inventory.", discord = "Esmaabi#5752",
-        name = "eMagicPro", servers = { "Zaros" }, version = "1.2")
+        name = "eMagicPro", servers = { "Zaros" }, version = "1.5")
 
 public class eMain extends Script{
 
@@ -27,8 +28,13 @@ public class eMain extends Script{
     static String status = null;
     public final int itemName = 558; //mind rune
     public final int npcName = 1838; //duck
+    public static eMain.State playerState;
 
-
+    enum State{
+        SPLASHING,
+        ALCHING,
+        WAITING,
+    }
 
     @Override
     public void onExecute() {
@@ -42,22 +48,44 @@ public class eMain extends Script{
         this.ctx.updateStatus("     eMagicPro     ");
         this.ctx.updateStatus("-------------------");
 
+        //gui
+        eGui.eGuiDialogue();
+        if (eGui.returnValue == 1) {
+            playerState = State.ALCHING;
+        } else if (ExchangeTask.returnValue == 0) {
+            playerState = State.SPLASHING;
+        } else {
+            playerState = State.WAITING;
+        }
+
     }
 
     @Override
     public void onProcess() {
-        if (ctx.players.population() == 1) {
-            if (ctx.players.getLocal().getAnimation() == -1) {
-                alchingItem();
-            } else if (ctx.players.getLocal().getAnimation() == 713) {
-                splashingNpc();
+        if (playerState == State.ALCHING) {
+
+            if (ctx.players.population() == 1) {
+                if (ctx.players.getLocal().getAnimation() == -1) {
+                    alchingItem();
+                } else if (ctx.players.getLocal().getAnimation() == 713) {
+                    splashingNpc();
+                } else {
+                    alchingItem();
+                }
             } else {
-                alchingItem();
+                if (ctx.players.getLocal().getAnimation() == -1) {
+                    ctx.updateStatus("Players around -> starting anti-ban");
+                    splashingNpc();
+                }
             }
 
-        } else {
+        } else if (playerState == State.WAITING) {
+            ctx.updateStatus("Please choose alching or splashing");
+
+        } else if (playerState == State.SPLASHING) {
             if (ctx.players.getLocal().getAnimation() == -1) {
                 splashingNpc();
+                count++;
             }
         }
     }
