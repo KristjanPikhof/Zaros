@@ -126,6 +126,8 @@ public class KillTask extends TaskScript implements LoopingScript{
         teleporter = new Teleporter(ctx);
         this.startTime = System.currentTimeMillis();
 
+        playerState = State.WAITING;
+
         //gui
         ExchangeTask.ExchangeDialogue();
         if (ExchangeTask.returnValue == 1) {
