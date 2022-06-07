@@ -3,6 +3,7 @@ package eMagicPro;
 import java.awt.Color;
 import java.awt.Graphics;
 
+import net.runelite.api.ChatMessageType;
 import net.runelite.api.coords.WorldPoint;
 import simple.hooks.filters.SimpleSkills;
 import simple.hooks.scripts.Category;
@@ -14,7 +15,7 @@ import simple.robot.script.Script;
 
 
 @ScriptManifest(author = "Esmaabi", category = Category.MAGIC, description = "Magic training bot for fast AFK magic xp.<br> You must have required runes and target nearby. Scrip will start splashing target and alching specific item. <br> Choose spell you want to auto attack, have auto retaliate activated and required alching supplies in inventory.", discord = "Esmaabi#5752",
-        name = "eMagicPro", servers = { "Zaros" }, version = "1")
+        name = "eMagicPro", servers = { "Zaros" }, version = "1.2")
 
 public class eMain extends Script{
 
@@ -27,6 +28,7 @@ public class eMain extends Script{
     static String status = null;
     public final int itemName = 558; //mind rune
     public final int npcName = 1838; //duck
+    private boolean runes;
 
 
 
@@ -37,7 +39,7 @@ public class eMain extends Script{
         this.startingSkillLevel = this.ctx.skills.realLevel(SimpleSkills.Skills.MAGIC);
         this.startingSkillExp = this.ctx.skills.experience(SimpleSkills.Skills.MAGIC);
         count = 0;
-        WorldPoint playerLocation = ctx.players.getLocal().getLocation();
+        runes = true;
 
         this.ctx.updateStatus("-------------------");
         this.ctx.updateStatus("     eMagicPro     ");
@@ -47,42 +49,40 @@ public class eMain extends Script{
 
     @Override
     public void onProcess() {
-        if (ctx.players.populate().population() == 1) {
+        if (ctx.players.population() == 1) {
             if (ctx.players.getLocal().getAnimation() == -1) {
-                status = "Starting loop";
-                ctx.magic.castSpellOnItem("High Level Alchemy", itemName);
-
+                alchingItem();
             } else if (ctx.players.getLocal().getAnimation() == 713) {
-                SimpleNpc castOn = ctx.npcs.populate().filter(npcName).nearest().next();
-                status = "Casting on NPC";
-                if (castOn != null && castOn.validateInteractable()) {
-                    castOn.click("Attack", "Duck");
-                    count++;
-                } else {
-                    status = "NPC not found";
-                    ctx.stopScript();
-                }
-
-            } else if (ctx.players.getLocal().getAnimation() == 711) {
-                status = "Alching item";
-                ctx.magic.castSpellOnItem("High Level Alchemy", itemName);
+                splashingNpc();
+            } else {
+                alchingItem();
             }
 
         } else {
             if (ctx.players.getLocal().getAnimation() == -1) {
-                SimpleNpc castOn = ctx.npcs.populate().filter(npcName).nearest().next();
-                status = "Casting on NPC (antiban)";
-                if (castOn != null && castOn.validateInteractable()) {
-                    castOn.click("Attack", "Duck");
-                    count++;
-                } else {
-                    status = "NPC not found";
-                    ctx.stopScript();
-                }
+                splashingNpc();
             }
         }
     }
 
+    public void splashingNpc() {
+        SimpleNpc castOn = ctx.npcs.populate().filter(npcName).nearest().next();
+        status = "Casting on NPC";
+        if (castOn != null && castOn.validateInteractable()) {
+            castOn.click("Attack");
+        } else {
+            status = "NPC not found";
+            ctx.updateStatus("NPC not found");
+            ctx.updateStatus("Stopping script");
+            ctx.stopScript();
+        }
+    }
+
+    public void alchingItem() {
+            status = "Alching item";
+            ctx.magic.castSpellOnItem("High Level Alchemy", itemName);
+            count++;
+    }
     @Override
     public void onTerminate() {
         this.startingSkillLevel = 0L;
@@ -95,7 +95,16 @@ public class eMain extends Script{
     }
 
     @Override
-    public void onChatMessage(ChatMessage e) {
+    public void onChatMessage(ChatMessage chatMessage) {
+        //System.out.println(chatMessage.getMessage());
+        //System.out.println(chatMessage.getType());
+
+        if (chatMessage.getType() == ChatMessageType.PUBLICCHAT
+                && chatMessage.getMessage().contains("kris")) {
+            ctx.updateStatus("Stopping script");
+            ctx.updateStatus("Someone asked for you");
+            ctx.stopScript();
+        }
     }
 
     @Override
@@ -119,7 +128,7 @@ public class eMain extends Script{
         g.drawString("Starting Level: " + this.startingSkillLevel + " (+" + SkillLevelsGained + ")", 15, 165);
         g.drawString("Current Level: " + currentSkillLevel, 15, 180);
         g.drawString("Exp gained: " + SkillExpGained + " (" + (SkillexpPhour / 1000L) + "k" + " xp/h)", 15, 195);
-        g.drawString("Counted action: " + count + " time(s)", 15, 210);
+        g.drawString("Actions made: " + count, 15, 210);
         g.drawString("Status: " + status, 15, 225);
     }
 
