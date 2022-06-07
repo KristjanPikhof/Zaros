@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.Graphics;
 
 import net.runelite.api.ChatMessageType;
-import net.runelite.api.coords.WorldPoint;
 import simple.hooks.filters.SimpleSkills;
 import simple.hooks.scripts.Category;
 import simple.hooks.scripts.ScriptManifest;
@@ -28,7 +27,6 @@ public class eMain extends Script{
     static String status = null;
     public final int itemName = 558; //mind rune
     public final int npcName = 1838; //duck
-    private boolean runes;
 
 
 
@@ -39,7 +37,6 @@ public class eMain extends Script{
         this.startingSkillLevel = this.ctx.skills.realLevel(SimpleSkills.Skills.MAGIC);
         this.startingSkillExp = this.ctx.skills.experience(SimpleSkills.Skills.MAGIC);
         count = 0;
-        runes = true;
 
         this.ctx.updateStatus("-------------------");
         this.ctx.updateStatus("     eMagicPro     ");
