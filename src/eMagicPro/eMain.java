@@ -43,6 +43,7 @@ public class eMain extends Script{
         this.startingSkillLevel = this.ctx.skills.realLevel(SimpleSkills.Skills.MAGIC);
         this.startingSkillExp = this.ctx.skills.experience(SimpleSkills.Skills.MAGIC);
         count = 0;
+        status = "Select mode";
 
         this.ctx.updateStatus("-------------------");
         this.ctx.updateStatus("     eMagicPro     ");
@@ -113,6 +114,7 @@ public class eMain extends Script{
         this.startingSkillLevel = 0L;
         this.startingSkillExp = 0L;
         this.count = 0;
+        playerState = null;
 
         this.ctx.updateStatus("----------------------");
         this.ctx.updateStatus("Thank You & Good Luck!");
