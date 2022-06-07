@@ -13,7 +13,7 @@ import simple.hooks.wrappers.SimpleNpc;
 import simple.robot.script.Script;
 
 
-@ScriptManifest(author = "Esmaabi", category = Category.MAGIC, description = "Magic training bot for fast AFK magic xp.<br> You must have required runes and target nearby. Scrip will start splashing target and alching spesific item. <br> Choose spell you want to auto attack, have auto retaliete ON and have alching supplies in inventory.", discord = "Esmaabi#5752",
+@ScriptManifest(author = "Esmaabi", category = Category.MAGIC, description = "Magic training bot for fast AFK magic xp.<br> You must have required runes and target nearby. Scrip will start splashing target and alching specific item. <br> Choose spell you want to auto attack, have auto retaliate activated and required alching supplies in inventory.", discord = "Esmaabi#5752",
         name = "eMagicPro", servers = { "Zaros" }, version = "1")
 
 public class eMain extends Script{
