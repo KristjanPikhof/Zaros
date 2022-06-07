@@ -14,7 +14,7 @@ import simple.robot.script.Script;
 
 
 @ScriptManifest(author = "Esmaabi", category = Category.MAGIC, description = "Magic training bot for fast AFK magic xp.<br> You must have required runes and target nearby. Scrip will start splashing target and alching spesific item. <br> Choose spell you want to auto attack, have auto retaliete ON and have alching supplies in inventory.", discord = "Esmaabi#5752",
-        name = "eMagicPro", servers = { "Zaros" }, version = "0.7")
+        name = "eMagicPro", servers = { "Zaros" }, version = "1")
 
 public class eMain extends Script{
 
@@ -47,7 +47,7 @@ public class eMain extends Script{
 
     @Override
     public void onProcess() {
-        if (ctx.players.populate().isEmpty()) {
+        if (ctx.players.populate().population() == 1) {
             if (ctx.players.getLocal().getAnimation() == -1) {
                 status = "Starting loop";
                 ctx.magic.castSpellOnItem("High Level Alchemy", itemName);
@@ -71,7 +71,7 @@ public class eMain extends Script{
         } else {
             if (ctx.players.getLocal().getAnimation() == -1) {
                 SimpleNpc castOn = ctx.npcs.populate().filter(npcName).nearest().next();
-                status = "Casting on NPC";
+                status = "Casting on NPC (antiban)";
                 if (castOn != null && castOn.validateInteractable()) {
                     castOn.click("Attack", "Duck");
                     count++;
