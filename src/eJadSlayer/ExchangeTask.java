@@ -10,8 +10,7 @@ public class ExchangeTask extends WindowAdapter {
     public static int returnValue;
 
 
-    public static void ExchangeDialogue()
-    {
+    public static void ExchangeDialogue() {
         String[] buttons = { "Jad Slayer", "Cape Exchange" };
 
         ImageIcon overloadIcon = new ImageIcon(ExchangeTask.class.getResource("TzTok-Jad-logo.png"));

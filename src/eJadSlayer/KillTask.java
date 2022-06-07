@@ -411,12 +411,17 @@ public class KillTask extends TaskScript implements LoopingScript{
 
                 if (!ctx.dialogue.dialogueOpen()) {
                     fireCapeNPC.click("Exchange fire cape");
+                    ctx.sleepCondition(() -> ctx.pathing.inMotion(), 2400);
                 } else {
-                    ctx.keyboard.pressKey(space);
-                    ctx.sleep(700);
-                    ctx.keyboard.pressKey(KeyEvent.VK_1);
-                    ctx.sleep(700);
-                    ctx.keyboard.pressKey(KeyEvent.VK_1);
+                    if (ctx.dialogue.canContinue()) {
+                        ctx.dialogue.clickContinue();
+                        ctx.sleep(700);
+                    } else {
+                        ctx.dialogue.clickDialogueOption(1);
+                        ctx.sleep(700);
+                        ctx.dialogue.clickDialogueOption(1);
+                        ctx.sleep(700);
+                    }
                 }
             }
         }
