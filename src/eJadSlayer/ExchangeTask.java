@@ -1,8 +1,6 @@
 package eJadSlayer;
 
 import javax.swing.*;
-
-//import java.awt.Image;
 import java.awt.event.*;
 
 public class ExchangeTask extends WindowAdapter {
