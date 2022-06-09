@@ -160,6 +160,8 @@ public class eMain extends Script{
         this.startingSkillExp = 0L;
         this.count = 0;
         playerState = null;
+        npcName = null;
+        eGui.returnSuicide = -1;
 
         this.ctx.updateStatus("----------------------");
         this.ctx.updateStatus("Thank You & Good Luck!");
