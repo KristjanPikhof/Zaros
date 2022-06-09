@@ -24,11 +24,13 @@ public class eMain extends Script{
     private long startTime = 0L;
     private long startingSkillLevel;
     private long startingSkillExp;
+    private int currentExp;
     private int count;
     static String status = null;
     public final int itemName = 558; //mind rune
-    public final int npcName = 1838; //duck
+    static String[] npcName;
     public static eMain.State playerState;
+    private long lastAnimation = -1;
 
     enum State{
         SPLASHING,
@@ -42,41 +44,84 @@ public class eMain extends Script{
         this.startTime = System.currentTimeMillis(); //paint
         this.startingSkillLevel = this.ctx.skills.realLevel(SimpleSkills.Skills.MAGIC);
         this.startingSkillExp = this.ctx.skills.experience(SimpleSkills.Skills.MAGIC);
+        currentExp = this.ctx.skills.experience(SimpleSkills.Skills.MAGIC);
         count = 0;
-        status = "Select mode";
+        status = "Setting up config";
+        npcName = null;
+        eGui.returnSuicide = -1;
+
 
         this.ctx.updateStatus("-------------------");
         this.ctx.updateStatus("     eMagicPro     ");
         this.ctx.updateStatus("-------------------");
 
         //gui
-        eGui.eGuiDialogue();
-        if (eGui.returnValue == 1) {
-            playerState = State.ALCHING;
-        } else if (ExchangeTask.returnValue == 0) {
+        eGui.eGuiDialogueMode();
+        if (eGui.returnMode == 0) {
             playerState = State.SPLASHING;
-        } else {
+        } else if (eGui.returnMode == 1) {
+            playerState = State.ALCHING;
+        } else if (eGui.returnMode == -1) {
             playerState = State.WAITING;
+        }
+
+        if (playerState == State.ALCHING) {
+            eGui.eGuiDialogueSuicide();
+        }
+
+        eGui.eGuiDialogueTarget();
+        if (eGui.returnNpc == 0) {
+            npcName = new String[]{"Duck"};
+        } else if (eGui.returnNpc == 1) {
+            npcName = new String[]{"Rat"};
+        } else if (eGui.returnNpc == 2) {
+            npcName = new String[]{"Man"};
+        } else if (eGui.returnNpc == 3) {
+            npcName = new String[]{"Woman"};
+        } else if (eGui.returnNpc == 4) {
+            npcName = new String[]{"Goblin"};
+        } else if (eGui.returnNpc == 5) {
+            npcName = new String[]{"Imp"};
+        } else if (eGui.returnNpc == -1) {
+            npcName = null;
         }
 
     }
 
     @Override
     public void onProcess() {
+
+        if (playerState == State.ALCHING || playerState == State.SPLASHING) {
+            if (currentExp != this.ctx.skills.experience(SimpleSkills.Skills.MAGIC)) {
+                count++;
+                currentExp = this.ctx.skills.experience(SimpleSkills.Skills.MAGIC);
+            }
+        }
+
         if (playerState == State.ALCHING) {
 
             if (ctx.players.population() == 1) {
-                if (ctx.players.getLocal().getAnimation() == -1) {
+                if (!ctx.players.getLocal().isAnimating()) {
                     alchingItem();
                 } else if (ctx.players.getLocal().getAnimation() == 713) {
                     splashingNpc();
                 } else {
                     alchingItem();
                 }
-            } else {
-                if (ctx.players.getLocal().getAnimation() == -1) {
+            } else if (ctx.players.population() > 1 && eGui.returnSuicide == 0) {
+                if (!ctx.players.getLocal().isAnimating() && (System.currentTimeMillis() > (lastAnimation + 2000))) {
                     ctx.updateStatus("Players around -> starting anti-ban");
                     splashingNpc();
+                } else if (ctx.players.getLocal().isAnimating()) {
+                    lastAnimation = System.currentTimeMillis();
+                }
+            } else if (ctx.players.population() > 1 && eGui.returnSuicide == 1) {
+                if (!ctx.players.getLocal().isAnimating()) {
+                    alchingItem();
+                } else if (ctx.players.getLocal().getAnimation() == 713) {
+                    splashingNpc();
+                } else {
+                    alchingItem();
                 }
             }
 
@@ -84,9 +129,10 @@ public class eMain extends Script{
             ctx.updateStatus("Please choose alching or splashing");
 
         } else if (playerState == State.SPLASHING) {
-            if (ctx.players.getLocal().getAnimation() == -1) {
+            if (!ctx.players.getLocal().isAnimating() && (System.currentTimeMillis() > (lastAnimation + 2000))) {
                 splashingNpc();
-                count++;
+            } else if (ctx.players.getLocal().isAnimating()) {
+                lastAnimation = System.currentTimeMillis();
             }
         }
     }
@@ -107,7 +153,6 @@ public class eMain extends Script{
     public void alchingItem() {
             status = "Alching item";
             ctx.magic.castSpellOnItem("High Level Alchemy", itemName);
-            count++;
     }
     @Override
     public void onTerminate() {
@@ -127,7 +172,7 @@ public class eMain extends Script{
         //System.out.println(chatMessage.getType());
 
         if (chatMessage.getType() == ChatMessageType.PUBLICCHAT
-                && chatMessage.getMessage().contains("kris")) {
+                && chatMessage.getMessage().contains(new String(ctx.players.getLocal().getName()))) {
             ctx.updateStatus("Stopping script");
             ctx.updateStatus("Someone asked for you");
             ctx.stopScript();
