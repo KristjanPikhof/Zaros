@@ -6,6 +6,7 @@ import java.awt.Graphics;
 import eJadSlayer.ExchangeTask;
 import net.runelite.api.ChatMessageType;
 import simple.hooks.filters.SimpleSkills;
+import simple.hooks.queries.SimpleEntityQuery;
 import simple.hooks.scripts.Category;
 import simple.hooks.scripts.ScriptManifest;
 import simple.hooks.simplebot.ChatMessage;
@@ -46,10 +47,10 @@ public class eMain extends Script{
         this.startingSkillExp = this.ctx.skills.experience(SimpleSkills.Skills.MAGIC);
         currentExp = this.ctx.skills.experience(SimpleSkills.Skills.MAGIC);
         count = 0;
-        status = "Setting up config";
         npcName = null;
         eGui.returnSuicide = -1;
-
+        eGui.returnMode = -1;
+        status = "Setting up config";
 
         this.ctx.updateStatus("-------------------");
         this.ctx.updateStatus("     eMagicPro     ");
@@ -59,17 +60,19 @@ public class eMain extends Script{
         eGui.eGuiDialogueMode();
         if (eGui.returnMode == 0) {
             playerState = State.SPLASHING;
+            if (playerState == State.SPLASHING) {
+                eGui.eGuiDialogueTarget();
+            }
         } else if (eGui.returnMode == 1) {
             playerState = State.ALCHING;
+            if (playerState == State.ALCHING) {
+                eGui.eGuiDialogueTarget();
+                eGui.eGuiDialogueSuicide();
+            }
         } else if (eGui.returnMode == -1) {
             playerState = State.WAITING;
         }
 
-        if (playerState == State.ALCHING) {
-            eGui.eGuiDialogueSuicide();
-        }
-
-        eGui.eGuiDialogueTarget();
         if (eGui.returnNpc == 0) {
             npcName = new String[]{"Duck"};
         } else if (eGui.returnNpc == 1) {
@@ -82,6 +85,10 @@ public class eMain extends Script{
             npcName = new String[]{"Goblin"};
         } else if (eGui.returnNpc == 5) {
             npcName = new String[]{"Imp"};
+        } else if (eGui.returnNpc == 6) {
+            npcName = new String[]{"Chicken"};
+        } else if (eGui.returnNpc == 7) {
+            npcName = new String[]{"Cow"};
         } else if (eGui.returnNpc == -1) {
             npcName = null;
         }
