@@ -23,9 +23,9 @@ import simple.robot.script.Script;
         + "Script will offer two working modes:<br> \"<b>Only Splashing</b>\" or \"<b>Alch & Splash</b>\"<br><br>"
         + "Before starting script:<br>"
         + "1. You must select autocast spell from combat tab;<br>"
-        + "2. You must have auto retaliate activated;<br>"
+        + "2. You must magic attack: <b>-65</b> & auto retaliate activated;<br>"
         + "3. Also have required runes in inventory (and items if alching).<br>", discord = "Esmaabi#5752",
-        name = "eMagicPro", servers = { "Zaros" }, version = "3")
+        name = "eMagicPro", servers = { "Zaros" }, version = "3.1")
 
 public class eMain extends Script{
 
@@ -37,9 +37,10 @@ public class eMain extends Script{
     private int currentExp;
     private int count;
     static String status = null;
-    static String[] npcName;
+    static String npcName;
     public static State playerState;
     private long lastAnimation = -1;
+    private boolean started;
 
     enum State{
         SPLASHING,
@@ -50,6 +51,7 @@ public class eMain extends Script{
     @Override
     public void onExecute() {
         System.out.println("Started eMagicPro!");
+        started = false;
         startTime = System.currentTimeMillis(); //paint
         this.startingSkillLevel = this.ctx.skills.realLevel(SimpleSkills.Skills.MAGIC);//paint
         this.startingSkillExp = this.ctx.skills.experience(SimpleSkills.Skills.MAGIC);//paint
@@ -65,7 +67,7 @@ public class eMain extends Script{
         this.ctx.updateStatus("      eMagicPro      ");
         this.ctx.updateStatus("---------------------");
 
-        //gui
+        //gui choosing gaming mode
         eGui.eGuiDialogueMode();
         if (eGui.returnMode == 0) {
             playerState = State.SPLASHING;
@@ -85,73 +87,64 @@ public class eMain extends Script{
             playerState = State.WAITING;
         }
 
-        if (eGui.returnNpc == 0) {
-            npcName = new String[]{"Duck"};
-        } else if (eGui.returnNpc == 1) {
-            npcName = new String[]{"Rat"};
-        } else if (eGui.returnNpc == 2) {
-            npcName = new String[]{"Man"};
-        } else if (eGui.returnNpc == 3) {
-            npcName = new String[]{"Woman"};
-        } else if (eGui.returnNpc == 4) {
-            npcName = new String[]{"Goblin"};
-        } else if (eGui.returnNpc == 5) {
-            npcName = new String[]{"Imp"};
-        } else if (eGui.returnNpc == 6) {
-            npcName = new String[]{"Chicken"};
-        } else if (eGui.returnNpc == 7) {
-            npcName = new String[]{"Cow"};
-        } else if (eGui.returnNpc == -1) {
+        // choosing NPC
+        if (eGui.returnNpc != null) {
+            npcName = eGui.returnNpc;
+        } else {
             npcName = null;
         }
+
+        // if script started
+        started = eGui.returnMode != -1 && npcName != null;
 
     }
 
     @Override
     public void onProcess() {
-
-        if (playerState == State.ALCHING || playerState == State.SPLASHING) {
-            if (currentExp != this.ctx.skills.experience(SimpleSkills.Skills.MAGIC)) {
-                count++;
-                currentExp = this.ctx.skills.experience(SimpleSkills.Skills.MAGIC);
-            }
-        }
-
-        if (playerState == State.ALCHING) {
-            if (ctx.players.population() == 1) {
-                if (!ctx.players.getLocal().isAnimating()) {
-                    alchingItem();
-                } else if (ctx.players.getLocal().getAnimation() == 713) {
-                    splashingNpc();
-                } else {
-                    alchingItem();
+        if (started) {
+            if (playerState == State.ALCHING || playerState == State.SPLASHING) {
+                if (currentExp != this.ctx.skills.experience(SimpleSkills.Skills.MAGIC)) {
+                    count++;
+                    currentExp = this.ctx.skills.experience(SimpleSkills.Skills.MAGIC);
                 }
-            } else if (ctx.players.population() > 1 && eGui.returnSuicide == 0) {
-                status = "Anti-ban activated";
+            }
+
+            if (playerState == State.ALCHING) {
+                if (ctx.players.population() == 1) {
+                    if (!ctx.players.getLocal().isAnimating()) {
+                        alchingItem();
+                    } else if (ctx.players.getLocal().getAnimation() == 713) {
+                        splashingNpc();
+                    } else {
+                        alchingItem();
+                    }
+                } else if (ctx.players.population() > 1 && eGui.returnSuicide == 0) {
+                    status = "Anti-ban activated";
+                    if (!ctx.players.getLocal().isAnimating() && (System.currentTimeMillis() > (lastAnimation + 3000))) {
+                        ctx.updateStatus(currentTime() + " Players around -> anti-ban");
+                        splashingNpc();
+                    } else if (ctx.players.getLocal().isAnimating()) {
+                        lastAnimation = System.currentTimeMillis();
+                    }
+                } else if (ctx.players.population() > 1 && eGui.returnSuicide == 1) {
+                    if (!ctx.players.getLocal().isAnimating()) {
+                        alchingItem();
+                    } else if (ctx.players.getLocal().getAnimation() == 713) {
+                        splashingNpc();
+                    } else {
+                        alchingItem();
+                    }
+                }
+
+            } else if (playerState == State.WAITING) {
+                ctx.updateStatus(currentTime() + " Please choose task");
+
+            } else if (playerState == State.SPLASHING) {
                 if (!ctx.players.getLocal().isAnimating() && (System.currentTimeMillis() > (lastAnimation + 3000))) {
-                    ctx.updateStatus(currentTime() + " Players around -> anti-ban active");
                     splashingNpc();
                 } else if (ctx.players.getLocal().isAnimating()) {
                     lastAnimation = System.currentTimeMillis();
                 }
-            } else if (ctx.players.population() > 1 && eGui.returnSuicide == 1) {
-                if (!ctx.players.getLocal().isAnimating()) {
-                    alchingItem();
-                } else if (ctx.players.getLocal().getAnimation() == 713) {
-                    splashingNpc();
-                } else {
-                    alchingItem();
-                }
-            }
-
-        } else if (playerState == State.WAITING) {
-            ctx.updateStatus(currentTime() + " Please choose task");
-
-        } else if (playerState == State.SPLASHING) {
-            if (!ctx.players.getLocal().isAnimating() && (System.currentTimeMillis() > (lastAnimation + 3000))) {
-                splashingNpc();
-            } else if (ctx.players.getLocal().isAnimating()) {
-                lastAnimation = System.currentTimeMillis();
             }
         }
     }

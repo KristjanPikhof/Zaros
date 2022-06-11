@@ -10,7 +10,7 @@ public class eGui extends WindowAdapter {
 
     public static int returnMode;
     public static int returnSuicide;
-    public static int returnNpc;
+    public static String returnNpc;
     public static String returnItem;
     public static Component f;
 
@@ -30,15 +30,15 @@ public class eGui extends WindowAdapter {
                         + "\n"
                         + "For more information check out Esmaabi on SimpleBot!",
                 "eMagicPro by Esmaabi",
-                JOptionPane.OK_CANCEL_OPTION, 0, eIcon, modeSelect, modeSelect[0]);
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, eIcon, modeSelect, modeSelect[0]);
     }
 
     public static void eGuiDialogueTarget() {
-        String[] targetSelect  = {"Duck", "Rat", "Man", "Woman", "Goblin", "Imp", "Chicken", "Cow"};
+        String[] targetSelect  = new String[] {"Duck", "Rat", "Man", "Woman", "Goblin", "Imp", "Chicken", "Cow"};
 
         ImageIcon eIcon = new ImageIcon(Objects.requireNonNull(eGui.class.getResource("mage-book-logo.png")));
 
-        returnNpc = JOptionPane.showOptionDialog(f,
+        returnNpc = (String) JOptionPane.showInputDialog(f,
                 "\n"
                         + "<html><b>Who will be your splashing target?</b></html>\n"
                         + "\n"
@@ -47,7 +47,7 @@ public class eGui extends WindowAdapter {
                         + "and choose splashing target from below:\n"
                         + "\n",
                 "Choose NPC to splash - eMagicPro by Esmaabi",
-                JOptionPane.WARNING_MESSAGE, 0, eIcon, targetSelect, targetSelect[0]);
+                JOptionPane.WARNING_MESSAGE, eIcon, targetSelect, targetSelect[0]);
     }
 
     public static void eGuiDialogueItem() {
@@ -80,7 +80,7 @@ public class eGui extends WindowAdapter {
                         + "as long as you are not alone, so you won't look suspicious.\n"
                         + "\n",
                 "Anti-ban option - eMagicPro by Esmaabi",
-                JOptionPane.WARNING_MESSAGE, 0, eIcon, suicideMode, suicideMode[0]);
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, eIcon, suicideMode, suicideMode[0]);
     }
 
     public static void main(String[] args) {
