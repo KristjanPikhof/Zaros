@@ -2,21 +2,30 @@ package eMagicPro;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.stream.Stream;
 
-import eJadSlayer.ExchangeTask;
-import net.runelite.api.ChatMessageType;
 import simple.hooks.filters.SimpleSkills;
-import simple.hooks.queries.SimpleEntityQuery;
 import simple.hooks.scripts.Category;
 import simple.hooks.scripts.ScriptManifest;
 import simple.hooks.simplebot.ChatMessage;
 
 import simple.hooks.wrappers.SimpleNpc;
+import simple.robot.api.ClientContext;
 import simple.robot.script.Script;
 
 
-@ScriptManifest(author = "Esmaabi", category = Category.MAGIC, description = "Magic training bot for fast AFK magic xp.<br> You must have required runes and target nearby. Scrip will start splashing target and alching specific item. <br> Choose spell you want to auto attack, have auto retaliate activated and required alching supplies in inventory.", discord = "Esmaabi#5752",
-        name = "eMagicPro", servers = { "Zaros" }, version = "1.5")
+@ScriptManifest(author = "Esmaabi", category = Category.MAGIC, description = "<br>"
+        + "It's fast & safe magic training method script for Zaros. "
+        + "You can splash chosen target and alch specified item. "
+        + "It's possible to select anti-ban option during setup.<br><br>"
+        + "Script will offer two working modes:<br> \"<b>Only Splashing</b>\" or \"<b>Alch & Splash</b>\"<br><br>"
+        + "Before starting script:<br>"
+        + "1. You must select autocast spell from combat tab;<br>"
+        + "2. You must have auto retaliate activated;<br>"
+        + "3. Also have required runes in inventory (and items if alching).<br>", discord = "Esmaabi#5752",
+        name = "eMagicPro", servers = { "Zaros" }, version = "3")
 
 public class eMain extends Script{
 
@@ -28,9 +37,8 @@ public class eMain extends Script{
     private int currentExp;
     private int count;
     static String status = null;
-    public final int itemName = 558; //mind rune
     static String[] npcName;
-    public static eMain.State playerState;
+    public static State playerState;
     private long lastAnimation = -1;
 
     enum State{
@@ -42,31 +50,35 @@ public class eMain extends Script{
     @Override
     public void onExecute() {
         System.out.println("Started eMagicPro!");
-        this.startTime = System.currentTimeMillis(); //paint
-        this.startingSkillLevel = this.ctx.skills.realLevel(SimpleSkills.Skills.MAGIC);
-        this.startingSkillExp = this.ctx.skills.experience(SimpleSkills.Skills.MAGIC);
-        currentExp = this.ctx.skills.experience(SimpleSkills.Skills.MAGIC);
+        startTime = System.currentTimeMillis(); //paint
+        this.startingSkillLevel = this.ctx.skills.realLevel(SimpleSkills.Skills.MAGIC);//paint
+        this.startingSkillExp = this.ctx.skills.experience(SimpleSkills.Skills.MAGIC);//paint
+        currentExp = this.ctx.skills.experience(SimpleSkills.Skills.MAGIC);// for actions counter by xp drop
         count = 0;
         npcName = null;
+        eGui.returnItem = null;
         eGui.returnSuicide = -1;
         eGui.returnMode = -1;
         status = "Setting up config";
 
-        this.ctx.updateStatus("-------------------");
-        this.ctx.updateStatus("     eMagicPro     ");
-        this.ctx.updateStatus("-------------------");
+        this.ctx.updateStatus("---------------------");
+        this.ctx.updateStatus("      eMagicPro      ");
+        this.ctx.updateStatus("---------------------");
 
         //gui
         eGui.eGuiDialogueMode();
         if (eGui.returnMode == 0) {
             playerState = State.SPLASHING;
+            ctx.updateStatus(currentTime() + " Starting splashing task");
             if (playerState == State.SPLASHING) {
                 eGui.eGuiDialogueTarget();
             }
         } else if (eGui.returnMode == 1) {
             playerState = State.ALCHING;
+            ctx.updateStatus(currentTime() + " Starting alching task");
             if (playerState == State.ALCHING) {
                 eGui.eGuiDialogueTarget();
+                eGui.eGuiDialogueItem();
                 eGui.eGuiDialogueSuicide();
             }
         } else if (eGui.returnMode == -1) {
@@ -106,7 +118,6 @@ public class eMain extends Script{
         }
 
         if (playerState == State.ALCHING) {
-
             if (ctx.players.population() == 1) {
                 if (!ctx.players.getLocal().isAnimating()) {
                     alchingItem();
@@ -116,8 +127,9 @@ public class eMain extends Script{
                     alchingItem();
                 }
             } else if (ctx.players.population() > 1 && eGui.returnSuicide == 0) {
-                if (!ctx.players.getLocal().isAnimating() && (System.currentTimeMillis() > (lastAnimation + 2000))) {
-                    ctx.updateStatus("Players around -> starting anti-ban");
+                status = "Anti-ban activated";
+                if (!ctx.players.getLocal().isAnimating() && (System.currentTimeMillis() > (lastAnimation + 3000))) {
+                    ctx.updateStatus(currentTime() + " Players around -> anti-ban active");
                     splashingNpc();
                 } else if (ctx.players.getLocal().isAnimating()) {
                     lastAnimation = System.currentTimeMillis();
@@ -133,10 +145,10 @@ public class eMain extends Script{
             }
 
         } else if (playerState == State.WAITING) {
-            ctx.updateStatus("Please choose alching or splashing");
+            ctx.updateStatus(currentTime() + " Please choose task");
 
         } else if (playerState == State.SPLASHING) {
-            if (!ctx.players.getLocal().isAnimating() && (System.currentTimeMillis() > (lastAnimation + 2000))) {
+            if (!ctx.players.getLocal().isAnimating() && (System.currentTimeMillis() > (lastAnimation + 3000))) {
                 splashingNpc();
             } else if (ctx.players.getLocal().isAnimating()) {
                 lastAnimation = System.currentTimeMillis();
@@ -151,24 +163,42 @@ public class eMain extends Script{
             castOn.click("Attack");
         } else {
             status = "NPC not found";
-            ctx.updateStatus("NPC not found");
-            ctx.updateStatus("Stopping script");
+            ctx.updateStatus(currentTime() + " NPC not found");
+            ctx.updateStatus(currentTime() + " Stopping script");
             ctx.stopScript();
         }
     }
 
     public void alchingItem() {
+        if (ctx.inventory.populate().filter(getItem(eGui.returnItem)).population() != 0) {
+            ctx.updateStatus(currentTime() + " Out of items to alch");
+            ctx.updateStatus(currentTime() + " Changing task");
+            playerState = State.SPLASHING;
+        } else {
             status = "Alching item";
-            ctx.magic.castSpellOnItem("High Level Alchemy", itemName);
+            ctx.magic.castSpellOnItem("High Level Alchemy", getItem(eGui.returnItem));
+        }
     }
+
+    public static int getItem(String... itemName) { //Scans for the name of item instead of exact name and gets itemID
+        return ClientContext.instance().inventory.populate()
+                .filter(p -> Stream.of(itemName).anyMatch(arr -> p.getName().toLowerCase().contains(arr.toLowerCase())))
+                .next().getId();
+    }
+
+    public static String currentTime() {
+        return LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
+    }
+
     @Override
     public void onTerminate() {
         this.startingSkillLevel = 0L;
         this.startingSkillExp = 0L;
         this.count = 0;
-        playerState = null;
         npcName = null;
+        eGui.returnItem = null;
         eGui.returnSuicide = -1;
+        eGui.returnMode = -1;
 
         this.ctx.updateStatus("----------------------");
         this.ctx.updateStatus("Thank You & Good Luck!");
@@ -176,15 +206,14 @@ public class eMain extends Script{
     }
 
     @Override
-    public void onChatMessage(ChatMessage chatMessage) {
-        //System.out.println(chatMessage.getMessage());
-        //System.out.println(chatMessage.getType());
-
-        if (chatMessage.getType() == ChatMessageType.PUBLICCHAT
-                && chatMessage.getMessage().contains(new String(ctx.players.getLocal().getName()))) {
-            ctx.updateStatus("Stopping script");
-            ctx.updateStatus("Someone asked for you");
-            ctx.stopScript();
+    public void onChatMessage(ChatMessage m) {
+        if (m.getMessage() != null) {
+            String message = m.getMessage().toLowerCase();
+            if (message.contains(ctx.players.getLocal().getName().toLowerCase())) {
+                ctx.updateStatus(currentTime() + " Someone asked for you");
+                ctx.updateStatus(currentTime() + " Stopping script");
+                ctx.stopScript();
+            }
         }
     }
 
