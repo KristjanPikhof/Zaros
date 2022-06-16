@@ -10,14 +10,16 @@ import simple.hooks.filters.SimpleSkills;
 import simple.hooks.scripts.Category;
 import simple.hooks.scripts.ScriptManifest;
 import simple.hooks.simplebot.ChatMessage;
+import simple.hooks.simplebot.Game;
 import simple.hooks.wrappers.SimpleNpc;
 import simple.hooks.wrappers.SimpleObject;
+import simple.hooks.wrappers.SimpleWidget;
 import simple.robot.script.Script;
 import simple.hooks.simplebot.teleporter.Teleporter;
 import simple.robot.utils.WorldArea;
 
 @ScriptManifest(author = "Esmaabi", category = Category.RUNECRAFTING, description = "Crafts astral runes in most effective way to train Runecrafting!<br> You must set last-preset to full inventory of pure essence.<br> Start from home. <br> Supported home in Edge or in Donor Zone", discord = "Esmaabi#5752",
-        name = "eAstralRunecrafter", servers = { "Zaros" }, version = "1")
+        name = "eAstralRunecrafter", servers = { "Zaros" }, version = "1.5")
 
 public class eMain extends Script{
     //coordinates
@@ -32,6 +34,8 @@ public class eMain extends Script{
     private long startingSkillExp;
     private int count;
     static String status = null;
+    private int currentExp;
+    boolean firstTeleport;
 
 
     @Override
@@ -41,7 +45,9 @@ public class eMain extends Script{
         this.startTime = System.currentTimeMillis(); //paint
         this.startingSkillLevel = this.ctx.skills.realLevel(SimpleSkills.Skills.RUNECRAFT);
         this.startingSkillExp = this.ctx.skills.experience(SimpleSkills.Skills.RUNECRAFT);
+        currentExp = this.ctx.skills.experience(SimpleSkills.Skills.RUNECRAFT);// for actions counter by xp drop
         count = 0;
+        firstTeleport = false;
 
         this.ctx.updateStatus("----------------------");
         this.ctx.updateStatus("  eAstralRunecrafter  ");
@@ -51,45 +57,52 @@ public class eMain extends Script{
 
     @Override
     public void onProcess() {
-        if (EDGE.containsPoint(ctx.players.getLocal().getLocation()) || DONOR.containsPoint(ctx.players.getLocal().getLocation()))   {
-            if (ctx.inventory.populate().filter(7936).population() == 0) {
-                    status = "Bank found";
-                    SimpleObject bank = ctx.objects.populate().filter("Bank booth").nextNearest();
-                        if (bank != null && bank.validateInteractable()) {
-                            status = "Getting last-preset";
-                            bank.click("Last-preset", "Bank booth");
-                            ctx.sleepCondition(() -> ctx.pathing.inMotion(), 1200);
-                        }
+        if (firstTeleport == false) {
+            if (!teleporter.opened()) {
+                status = "First teleport to altar";
+                ctx.magic.castSpellOnce("Minigame Teleport");
             } else {
-                status = "Teleporting to altar";
-                if (!teleporter.opened()) {
-                    ctx.magic.castSpellOnce("Minigame Teleport");
-                } else {
-                    status = "Browsing for altar teleport";
-                    teleporter.teleportStringPath("Skilling", "Runecrafting: Astral Altar");
-                    ctx.onCondition(() -> ASTRAL.containsPoint(ctx.players.getLocal().getLocation()), 2400);
-                    count++;
-                }
-            }
-
-        } else if (ASTRAL.containsPoint(ctx.players.getLocal().getLocation())) {
-            if (ctx.inventory.populate().filter(7936).population() == 0) {
-                status = "Teleporting to home";
-                ctx.magic.castSpellOnce("Home Teleport");
-            } else {
-                status = "Searching for altar";
-                SimpleObject altar = ctx.objects.populate().filter(34771).nextNearest();
-                if (altar != null && altar.validateInteractable()) {
-                    status = "Crafting runes";
-                    altar.click("Craft-rune", "Altar");
-                    ctx.sleepCondition(() -> ctx.pathing.inMotion(), 1200);
-                }
+                status = "Browsing for altar teleport";
+                teleporter.teleportStringPath("Skilling", "Runecrafting: Astral Altar");
+                ctx.onCondition(() -> ASTRAL.containsPoint(ctx.players.getLocal().getLocation()), 2400);
+                firstTeleport = true;
             }
         } else {
-            status = "Out of area!";
-            ctx.sleep(3000);
-            ctx.stopScript();
-            ctx.sendLogout();
+            if (EDGE.containsPoint(ctx.players.getLocal().getLocation()) || DONOR.containsPoint(ctx.players.getLocal().getLocation())) {
+                if (ctx.inventory.populate().filter(7936).population() == 0) {
+                    status = "Bank found";
+                    SimpleObject bank = ctx.objects.populate().filter("Bank booth").nextNearest();
+                    if (bank != null && bank.validateInteractable()) {
+                        status = "Getting last-preset";
+                        bank.click("Last-preset", "Bank booth");
+                        ctx.sleepCondition(() -> ctx.pathing.inMotion(), 1200);
+                    }
+                } else {
+                    status = "Teleporting to altar";
+                    SimpleWidget homeTeleport = ctx.widgets.getWidget(218, 6);//home teleport
+                    ctx.game.tab(Game.Tab.MAGIC);
+                    homeTeleport.click("Runecrafting: Astral Altar", "Home Teleport");
+                    ctx.onCondition(() -> ASTRAL.containsPoint(ctx.players.getLocal().getLocation()), 2400);
+                }
+            } else if (ASTRAL.containsPoint(ctx.players.getLocal().getLocation())) {
+                if (ctx.inventory.populate().filter(7936).population() == 0) {
+                    status = "Teleporting to home";
+                    ctx.magic.castSpellOnce("Home Teleport");
+                } else {
+                    status = "Searching for altar";
+                    SimpleObject altar = ctx.objects.populate().filter(34771).nextNearest();
+                    if (altar != null && altar.validateInteractable()) {
+                        status = "Crafting runes";
+                        altar.click("Craft-rune", "Altar");
+                        ctx.sleepCondition(() -> ctx.pathing.inMotion(), 1200);
+                    }
+                }
+            }
+        }
+
+        if (currentExp != this.ctx.skills.experience(SimpleSkills.Skills.RUNECRAFT)) {
+            count++;
+            currentExp = this.ctx.skills.experience(SimpleSkills.Skills.RUNECRAFT);
         }
     }
 
