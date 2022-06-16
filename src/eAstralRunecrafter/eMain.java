@@ -3,7 +3,8 @@ package eAstralRunecrafter;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.event.KeyEvent;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 import net.runelite.api.coords.WorldPoint;
 import simple.hooks.filters.SimpleSkills;
@@ -11,7 +12,6 @@ import simple.hooks.scripts.Category;
 import simple.hooks.scripts.ScriptManifest;
 import simple.hooks.simplebot.ChatMessage;
 import simple.hooks.simplebot.Game;
-import simple.hooks.wrappers.SimpleNpc;
 import simple.hooks.wrappers.SimpleObject;
 import simple.hooks.wrappers.SimpleWidget;
 import simple.robot.script.Script;
@@ -19,7 +19,7 @@ import simple.hooks.simplebot.teleporter.Teleporter;
 import simple.robot.utils.WorldArea;
 
 @ScriptManifest(author = "Esmaabi", category = Category.RUNECRAFTING, description = "Crafts astral runes in most effective way to train Runecrafting!<br> You must set last-preset to full inventory of pure essence.<br> Start from home. <br> Supported home in Edge or in Donor Zone", discord = "Esmaabi#5752",
-        name = "eAstralRunecrafter", servers = { "Zaros" }, version = "1.5")
+        name = "eAstralRunecrafter", servers = { "Zaros" }, version = "2")
 
 public class eMain extends Script{
     //coordinates
@@ -106,11 +106,16 @@ public class eMain extends Script{
         }
     }
 
+    public static String currentTime() {
+        return LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
+    }
+
     @Override
     public void onTerminate() {
         this.startingSkillLevel = 0L;
         this.startingSkillExp = 0L;
         this.count = 0;
+        this.firstTeleport = false;
 
         this.ctx.updateStatus("----------------------");
         this.ctx.updateStatus("Thank You & Good Luck!");
@@ -118,7 +123,15 @@ public class eMain extends Script{
     }
 
     @Override
-    public void onChatMessage(ChatMessage e) {
+    public void onChatMessage(ChatMessage m) {
+        if (m.getMessage() != null) {
+            String message = m.getMessage().toLowerCase();
+            if (message.contains(ctx.players.getLocal().getName().toLowerCase())) {
+                ctx.updateStatus(currentTime() + " Someone asked for you");
+                ctx.updateStatus(currentTime() + " Stopping script");
+                ctx.stopScript();
+            }
+        }
     }
 
     @Override
