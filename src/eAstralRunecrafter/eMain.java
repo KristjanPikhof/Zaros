@@ -18,7 +18,7 @@ import simple.robot.script.Script;
 import simple.hooks.simplebot.teleporter.Teleporter;
 import simple.robot.utils.WorldArea;
 
-@ScriptManifest(author = "Esmaabi", category = Category.RUNECRAFTING, description = "Crafts astral runes in most effective way to train Runecrafting!<br> You must set last-preset to full inventory of pure essence.<br> Start from home. <br> Supported home in Edge or in Donor Zone", discord = "Esmaabi#5752",
+@ScriptManifest(author = "Esmaabi", category = Category.RUNECRAFTING, description = "Crafts astral runes in most effective way to train Runecrafting!<br> You must set last-preset to full inventory of pure essence.<br> Start anywhere. <br> Supported home in Edge or in Donor Zone", discord = "Esmaabi#5752",
         name = "eAstralRunecrafter", servers = { "Zaros" }, version = "2")
 
 public class eMain extends Script{
