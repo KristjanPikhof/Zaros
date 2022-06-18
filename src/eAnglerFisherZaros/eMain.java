@@ -24,7 +24,7 @@ import simple.robot.utils.WorldArea;
         category = Category.FISHING,
         description = "<br>Most effective anglerfish catching bot on Zaros! <br><br><b>Features & recommendations:</b>You must have <b>fishing rod</b> and <b>sandworms</b> in inventory; <br> You can start script anywhere; <br> Supported special attack with dragon harpoon equipped; <br> Included <b>anti-ban</b> features!",
         discord = "Esmaabi#5752",
-        name = "eAnglerFisherZaros", servers = { "Zaros" }, version = "2")
+        name = "eAnglerFisherZaros", servers = { "Zaros" }, version = "2.1")
 
 public class eMain extends Script{
     //coordinates
@@ -45,7 +45,6 @@ public class eMain extends Script{
     private long startingSkillExp;
     private int count;
     static String status = null;
-    private int currentExp;
     boolean firstTeleport;
     boolean fishingState;
     public static State playerState;
@@ -72,7 +71,6 @@ public class eMain extends Script{
         this.startTime = System.currentTimeMillis(); //paint
         this.startingSkillLevel = this.ctx.skills.realLevel(SimpleSkills.Skills.FISHING);
         this.startingSkillExp = this.ctx.skills.experience(SimpleSkills.Skills.FISHING);
-        currentExp = this.ctx.skills.experience(SimpleSkills.Skills.FISHING);// for actions counter by xp drop
         count = 0;
         firstTeleport = false;
         fishingState = false;
@@ -166,11 +164,6 @@ public class eMain extends Script{
                 }
             }
         }
-
-/*        if (currentExp != this.ctx.skills.experience(SimpleSkills.Skills.FISHING)) {
-            count++;
-            currentExp = this.ctx.skills.experience(SimpleSkills.Skills.FISHING);
-        }*/
 
         if (ctx.combat.getSpecialAttackPercentage() == 100 && ctx.equipment.populate().filter("Dragon harpoon").population() == 1 && ctx.players.getLocal().getAnimation() == 622) {
             ctx.sleep(randomSleeping(1200, 24000));
@@ -274,7 +267,6 @@ public class eMain extends Script{
         this.startingSkillExp = 0L;
         this.count = 0;
         this.firstTeleport = false;
-        this.currentExp = 0;
         this.lastAnimation = -1;
         this.fishingState = false;
         playerState = null;
