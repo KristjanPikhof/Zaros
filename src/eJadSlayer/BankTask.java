@@ -9,8 +9,6 @@ import simple.hooks.wrappers.SimpleObject;
 import simple.robot.api.ClientContext;
 import simple.robot.utils.WorldArea;
 
-import java.util.stream.Stream;
-
 import static eJadSlayer.KillTask.teleporter;
 
 public class BankTask extends Task {

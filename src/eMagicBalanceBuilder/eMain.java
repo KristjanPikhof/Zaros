@@ -2,9 +2,12 @@ package eMagicBalanceBuilder;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.event.KeyEvent;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
+import net.runelite.api.coords.WorldPoint;
+import simple.hooks.filters.SimpleShop;
 import simple.hooks.filters.SimpleSkills;
 import simple.hooks.scripts.Category;
 import simple.hooks.scripts.ScriptManifest;
@@ -13,6 +16,7 @@ import simple.hooks.simplebot.ChatMessage;
 import simple.hooks.wrappers.SimpleObject;
 import simple.hooks.wrappers.SimpleWidget;
 import simple.robot.script.Script;
+import simple.robot.utils.WorldArea;
 
 
 @ScriptManifest(author = "Esmaabi", category = Category.CONSTRUCTION, description = "<br>"
@@ -35,6 +39,8 @@ public class eMain extends Script{
     private int count;
     static String status = null;
 
+    private final WorldArea EDGE_SHOP = new WorldArea(new WorldPoint(3071, 3520, 0), new WorldPoint(3113, 3503, 0));
+
 
     @Override
     public void onExecute() {
@@ -54,14 +60,38 @@ public class eMain extends Script{
 
     @Override
     public void onProcess() {
-        SimpleObject buildSpace = ctx.objects.populate().filter("Elemental balance").filterHasAction("Remove").next();
-        //SimpleObject removeBalancer = ctx.objects.populate().filter("Elemental balance space").filterHasAction("Build").next();
-        if (buildSpace != null) {
-            removeMagicBalancer();
-        } else {
-            buildMagicBalancer();
-        }
 
+        //if (!EDGE_SHOP.containsPoint(ctx.players.getLocal().getLocation())) {
+            SimpleObject buildSpace = ctx.objects.populate().filter("Elemental balance").filterHasAction("Remove").next();
+            //SimpleObject removeBalancer = ctx.objects.populate().filter("Elemental balance space").filterHasAction("Build").next();
+            if (buildSpace != null) {
+                removeMagicBalancer();
+            } else {
+                buildMagicBalancer();
+            }
+/*        } else {
+            SimpleWidget shopWidget = ctx.widgets.getWidget(1029, 17);
+            if (shopWidget != null) {
+                if (ctx.inventory.populate().filter(995) != null) {
+                    if (ctx.inventory.populate().filter(554).population() < 500000) {
+                        SimpleWidget fireRune = ctx.widgets.getWidget(1029, 17).getDynamicChildren()[0];
+                        if (fireRune != null && fireRune.validateInteractable()) {
+                            fireRune.click("Buy X", "Fire rune");
+                            if (ctx.dialogue.dialogueOpen()) {
+                                ctx.keyboard.clickKey(KeyEvent.VK_1);
+                                ctx.sleep(600);
+                                ctx.keyboard.clickKey(KeyEvent.VK_2);
+                                ctx.sleep(600);
+                                ctx.keyboard.clickKey(KeyEvent.VK_K);
+                                ctx.sleep(600);
+                                ctx.keyboard.clickKey(KeyEvent.VK_ENTER);
+                            }
+
+                        }
+                    }
+                }
+            }
+        }*/
         if (currentExp != this.ctx.skills.experience(SimpleSkills.Skills.CONSTRUCTION)) {
             count++;
             currentExp = this.ctx.skills.experience(SimpleSkills.Skills.CONSTRUCTION);
