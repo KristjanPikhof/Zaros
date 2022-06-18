@@ -178,8 +178,8 @@ public class eMain extends Script{
     public void fishingAnglers() {
         SimpleNpc anglerFish = ctx.npcs.populate().filter(6825).nextNearest();
         status = "Sleeping (anti-ban)";
+        ctx.sleep(randomSleeping(1200, 24000));
         if (anglerFish != null && anglerFish.validateInteractable()) {
-            ctx.sleep(randomSleeping(1200, 24000));
             status = "Fishing";
             anglerFish.click("Bait", "Rod Fishing spot");
         } else {
