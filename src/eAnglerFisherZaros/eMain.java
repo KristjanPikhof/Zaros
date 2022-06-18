@@ -167,10 +167,10 @@ public class eMain extends Script{
             }
         }
 
-        if (currentExp != this.ctx.skills.experience(SimpleSkills.Skills.FISHING)) {
+/*        if (currentExp != this.ctx.skills.experience(SimpleSkills.Skills.FISHING)) {
             count++;
             currentExp = this.ctx.skills.experience(SimpleSkills.Skills.FISHING);
-        }
+        }*/
 
         if (ctx.combat.getSpecialAttackPercentage() == 100 && ctx.equipment.populate().filter("Dragon harpoon").population() == 1 && ctx.players.getLocal().getAnimation() == 622) {
             ctx.sleep(randomSleeping(1200, 24000));
@@ -292,7 +292,7 @@ public class eMain extends Script{
                 ctx.updateStatus(currentTime() + " Someone asked for you");
                 ctx.updateStatus(currentTime() + " Stopping script");
                 ctx.stopScript();
-            } else if (message.contains("you catch a.")) {
+            } else if (message.contains("catch a anglerfish")) {
                 count++;
             }
         }
