@@ -25,7 +25,7 @@ import static eDonorCookingZaros.eGui.eGuiDialogueTarget;
                 "<li>Zoom out to <b>maximum</b>;</li>" +
                 "<li>Included <b>anti-ban</b> features!</li></ul>",
         discord = "Esmaabi#5752",
-        name = "eDonorCookingZaros", servers = { "Zaros" }, version = "1.1")
+        name = "eDonorCookingZaros", servers = { "Zaros" }, version = "1.2")
 
 public class eMain extends Script{
 
@@ -112,7 +112,7 @@ public class eMain extends Script{
         SimpleItem fishInv = ctx.inventory.populate().filter(fishName).next();
         if (fishInv != null && cookingFire != null && fishInv.validateInteractable() && cookingFire.validateInteractable() && !ctx.players.getLocal().isAnimating()) {
             status = "Sleeping to cook (anti-ban)";
-            ctx.sleep(randomSleeping(1200, 16400));
+            ctx.sleep(randomSleeping(800, 16400));
             status = "Cooking " + fishName.toLowerCase();
             fishInv.click(0);
             ctx.sleep(randomSleeping(600, 1200));
@@ -132,7 +132,7 @@ public class eMain extends Script{
             ctx.sleep(randomSleeping(6200, 16400));
             status = "Refilling " + fishName.toLowerCase();
             bankChest.click("Last-preset", "Bank chest");
-            ctx.sleepCondition(() -> ctx.inventory.populate().filter(fishName).population() > 0, randomSleeping(6200, 12600));
+            ctx.sleepCondition(() -> ctx.inventory.populate().filter(fishName).population() > 0, randomSleeping(4200, 12600));
         }
     }
 
