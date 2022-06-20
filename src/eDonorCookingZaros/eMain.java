@@ -89,10 +89,8 @@ public class eMain extends Script{
                     lastAnimation = System.currentTimeMillis();
                 }
             } else {
-                ctx.updateStatus(currentTime() + " Error -> Restart script");
-                ctx.updateStatus(currentTime() + " Stopping script");
-                ctx.sleep(2400);
-                ctx.stopScript();
+                ctx.updateStatus(currentTime() + " Unknown error -> restarting");
+                openingBank();
             }
 
             if (ctx.pathing.energyLevel() > 30 && !ctx.pathing.running()) {
@@ -145,9 +143,9 @@ public class eMain extends Script{
         fishName = null;
 
         this.ctx.updateStatus("-------------- " + currentTime() + " --------------");
-        this.ctx.updateStatus("---------------------------------");
-        this.ctx.updateStatus("      Thank You & Good Luck!     ");
-        this.ctx.updateStatus("---------------------------------");
+        this.ctx.updateStatus("-----------------------------------");
+        this.ctx.updateStatus("       Thank You & Good Luck!      ");
+        this.ctx.updateStatus("-----------------------------------");
     }
 
     @Override
