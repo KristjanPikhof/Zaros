@@ -25,7 +25,7 @@ import static eDonorCookingZaros.eGui.eGuiDialogueTarget;
                 "<li>Zoom out to <b>maximum</b>;</li>" +
                 "<li>Included <b>anti-ban</b> features!</li></ul>",
         discord = "Esmaabi#5752",
-        name = "eDonorCookingZaros", servers = { "Zaros" }, version = "1")
+        name = "eDonorCookingZaros", servers = { "Zaros" }, version = "1.1")
 
 public class eMain extends Script{
 
@@ -116,7 +116,7 @@ public class eMain extends Script{
             status = "Cooking " + fishName.toLowerCase();
             fishInv.click(0);
             ctx.sleep(randomSleeping(600, 1200));
-            cookingFire.click(0);
+            cookingFire.click("Use");
             ctx.onCondition(() -> ctx.dialogue.dialogueOpen(), 6200);
             if (ctx.dialogue.dialogueOpen()) {
                 ctx.dialogue.clickDialogueOption(1);
