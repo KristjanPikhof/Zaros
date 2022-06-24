@@ -5,13 +5,12 @@ import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Stream;
 import javax.imageio.ImageIO;
 import net.runelite.api.coords.WorldPoint;
+import simple.hooks.filters.SimpleBank;
 import simple.hooks.filters.SimplePrayers.Prayers;
 import simple.hooks.filters.SimpleSkills.Skills;
 import simple.hooks.queries.SimpleEntityQuery;
@@ -27,7 +26,7 @@ import simple.hooks.wrappers.*;
 import simple.robot.api.ClientContext;
 
 @ScriptManifest(author = "Overload, reworked by Esmaabi", category = Category.MINIGAMES, description = "Please disable all plugins.<br>Start anywhere with:<br> 1) ranged setup &<br> 2) ranging potions(4), Super defence potions(4) and Prayer potions(4) in bank.",
-        name = "Jad Slayer v2", servers = {"Zaros"}, version = "1.0", discord = "Esmaabi#5752" )
+        name = "Jad Slayer v2", servers = {"Zaros"}, version = "2.0", discord = "Esmaabi#5752" )
 
 public class KillTask extends TaskScript implements LoopingScript {
 
@@ -43,11 +42,12 @@ public class KillTask extends TaskScript implements LoopingScript {
     //private int fireCape = ctx.inventory.populate().filter("Fire cape").population();
 
     //Configs
-    private static Random r = new Random();
+    private static final Random r = new Random();
     static int randomSleep = r.nextInt((2000 - 1500) + 1) + 1500;
     static Teleporter teleporter;
     private BufferedImage backgroundImage;
     boolean jadHasBeenKilled = false;
+    boolean prayerRigour = false;
 
     //NPC
     private SimpleNpc jad;
@@ -119,7 +119,7 @@ public class KillTask extends TaskScript implements LoopingScript {
 
         //paint
         try {
-            backgroundImage = ImageIO.read(KillTask.class.getResourceAsStream("parchment.png"));
+            backgroundImage = ImageIO.read(Objects.requireNonNull(KillTask.class.getResourceAsStream("parchment.png")));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -129,8 +129,10 @@ public class KillTask extends TaskScript implements LoopingScript {
         this.startTime = System.currentTimeMillis();
         jadHasBeenKilled = false;
         playerState = State.WAITING;
+        ctx.viewport.angle(180);
+        ctx.viewport.pitch(true);
 
-        //gui
+        //main gui
         ExchangeTask.ExchangeDialogue();
         if (ExchangeTask.returnValue == 1) {
             playerState = State.EXCHANGE_CAPES;
@@ -141,6 +143,18 @@ public class KillTask extends TaskScript implements LoopingScript {
         } else {
             playerState = State.WAITING;
         }
+
+        //prayer gui
+        if (ExchangeTask.returnValue == 0) {
+            ExchangeTask.prayerOptions();
+            if (ExchangeTask.returnPrayer == 0) {
+                prayerRigour = false;
+            } else if (ExchangeTask.returnPrayer == 1) {
+                prayerRigour = true;
+            } else {
+                prayerRigour = false;
+            }
+        }
     }
 
     @Override
@@ -149,6 +163,7 @@ public class KillTask extends TaskScript implements LoopingScript {
         super.onProcess();
 
         if (playerState == State.EXCHANGE_CAPES) {
+            ctx.updateStatus("Task: Cape exchange");
             exchangeCapes();
         } else if (jad == null && BankTask.jadEntrance.containsPoint(ctx.players.getLocal().getLocation())
                 && playerState != State.WAITING && playerState != State.EXCHANGE_CAPES) {
@@ -165,7 +180,7 @@ public class KillTask extends TaskScript implements LoopingScript {
             if (ctx.combat.health() == 0) {
                 playerDeathDetect();
             }
-            if (jadHasBeenKilled == true) {
+            if (jadHasBeenKilled) {
                 jadDeathDetect();
             }
         }
@@ -244,28 +259,31 @@ public class KillTask extends TaskScript implements LoopingScript {
                     protectFromMagic();
                     attackHealers();
                     eatTask();
-                    specialAttack();
                     prayerFlick();
                     refocusJad();
                     distanceCheck();
                     ctx.viewport.turnTo(jad);
+                    specialAttack();
+                    runningEnable();
                     break;
                 case 2652:
                     protectFromRange();
                     attackHealers();
                     eatTask();
-                    specialAttack();
                     prayerFlick();
                     refocusJad();
                     distanceCheck();
                     ctx.viewport.turnTo(jad);
+                    specialAttack();
+                    runningEnable();
                     break;
                 case 2655:
                     protectFromMelee();
                     distanceSelfFromBoss();
-                    specialAttack();
                     prayerFlick();
                     ctx.viewport.turnTo(jad);
+                    specialAttack();
+                    runningEnable();
                     break;
 
                 default:
@@ -296,11 +314,19 @@ public class KillTask extends TaskScript implements LoopingScript {
 
     private void prayerFlick() {
 
-        if (ctx.players.getLocal().getAnimation() == -1) {
-            ctx.prayers.prayer(Prayers.STEEL_SKIN, true);
-            ctx.prayers.prayer(Prayers.EAGLE_EYE, true);
+        if (!prayerRigour) {
+            if (ctx.players.getLocal().getAnimation() == -1) {
+                ctx.prayers.prayer(Prayers.STEEL_SKIN, true);
+                ctx.prayers.prayer(Prayers.EAGLE_EYE, true);
+            } else {
+                ctx.prayers.prayer(Prayers.EAGLE_EYE, false);
+            }
         } else {
-            ctx.prayers.prayer(Prayers.EAGLE_EYE, false);
+            if (ctx.players.getLocal().getAnimation() == -1) {
+                ctx.prayers.prayer(Prayers.RIGOUR, true);
+            } else {
+                ctx.prayers.prayer(Prayers.RIGOUR, false);
+            }
         }
     }
 
@@ -352,10 +378,6 @@ public class KillTask extends TaskScript implements LoopingScript {
         }
     }
 
-    public static void teleportToLocation(String name, String subname) {
-        teleporter.teleportStringPath(name, subname);
-    }
-
     public void disablePrayers() {
         ctx.updateStatus("Disabling prayers");
         ctx.prayers.prayer(Prayers.PROTECT_FROM_MAGIC, false);
@@ -363,6 +385,7 @@ public class KillTask extends TaskScript implements LoopingScript {
         ctx.prayers.prayer(Prayers.PROTECT_FROM_MELEE, false);
         ctx.prayers.prayer(Prayers.STEEL_SKIN, false);
         ctx.prayers.prayer(Prayers.EAGLE_EYE, false);
+        ctx.prayers.prayer(Prayers.RIGOUR, false);
     }
 
     public void distanceSelfFromBoss() {
@@ -377,24 +400,29 @@ public class KillTask extends TaskScript implements LoopingScript {
 
     private void specialAttack() {
         if (ctx.combat.getSpecialAttackPercentage() >= 55 && ctx.equipment.populate().filter(861, 12926, 20558) != null) {
-            ctx.combat.specialAttack();
+            ctx.combat.toggleSpecialAttack(true);
+        }
+    }
+
+    private void runningEnable() {
+        if (ctx.pathing.energyLevel() > 30 && !ctx.pathing.running()) {
+            ctx.pathing.running(true);
         }
     }
 
     public void exchangeCapes() {
-        ctx.updateStatus("Started task: Cape exchange");
         SimpleNpc fireCapeNPC = ctx.npcs.populate().filter(2180).nearest().next();
         SimpleObject banker = ctx.objects.populate().filter("Bank Chest").nearest().next(); // Grabs nearest banker at sand crabs
 
         if (ctx.inventory.populate().filter(6570).population() == 0) {
-            if (banker != null && banker.validateInteractable()) {
+            if (banker != null && banker.validateInteractable() && !ctx.bank.bankOpen()) {
                 ctx.updateStatus("Refilling on fire capes");
                 banker.click("Use");
-                ctx.sleepCondition(() -> ctx.bank.bankOpen(), 2400);
+                ctx.onCondition(() -> ctx.bank.bankOpen(), 2400);
             } else if (ctx.bank.bankOpen()) {
                 ctx.bank.depositInventory();
                 ctx.sleep(800);
-                ctx.bank.withdraw(6570, 28); // Fire Cape
+                ctx.bank.withdraw(6570, SimpleBank.Amount.ALL); // Fire Cape
                 ctx.sleep(800);
                 ctx.bank.closeBank();
                 ctx.onCondition(() -> ctx.inventory.population() >= 1, 2400);
@@ -406,19 +434,12 @@ public class KillTask extends TaskScript implements LoopingScript {
             }
         } else {
             if (fireCapeNPC.validateInteractable() && fireCapeNPC != null && !ctx.dialogue.dialogueOpen()) {
-                ctx.updateStatus("Selling fire capes");
                 fireCapeNPC.click("Exchange fire cape");
                 ctx.sleepCondition(() -> ctx.pathing.inMotion(), 2400);
-            } else if (ctx.dialogue.dialogueOpen() && ctx.dialogue.populate().filterContains("I have a fire cape").population() == 1) {
+            } else if (ctx.dialogue.dialogueOpen()) {
+                ctx.dialogue.clickDialogueOption(1);
                 ctx.keyboard.clickKey(space);
-                ctx.sleep(700);
-                if (ctx.dialogue.populate().filterContains("Yes").population() == 1) {
-                    ctx.keyboard.clickKey(VK_1);
-                    ctx.sleep(700);
-                } else {
-                    ctx.keyboard.clickKey(space);
-                    ctx.sleep(700);
-                }
+                ctx.onCondition(() -> !ctx.dialogue.dialogueOpen(), 800);
             }
         }
     }
@@ -437,7 +458,7 @@ public class KillTask extends TaskScript implements LoopingScript {
         s %= 60L;
         m %= 60L;
         h %= 24L;
-        return String.format("%02d:%02d:%02d", new Object[] { Long.valueOf(h), Long.valueOf(m), Long.valueOf(s) });
+        return String.format("%02d:%02d:%02d", h, m, s);
     }
 
 }

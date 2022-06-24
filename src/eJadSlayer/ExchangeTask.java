@@ -1,24 +1,22 @@
 package eJadSlayer;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.*;
+import java.util.Objects;
 
 public class ExchangeTask extends WindowAdapter {
 
     public static int returnValue;
+    public static int returnPrayer;
+    public static Component f;
 
 
     public static void ExchangeDialogue() {
         String[] buttons = { "Jad Slayer", "Cape Exchange" };
 
-        ImageIcon overloadIcon = new ImageIcon(ExchangeTask.class.getResource("TzTok-Jad-logo.png"));
-        /*
-         * Image resizedJad = jadIcon.getImage(); Image scaledImage =
-         * resizedJad.getScaledInstance(100, 100, Image.SCALE_DEFAULT); Icon scaledIcon
-         * = new ImageIcon( scaledImage );
-         */
-
-        returnValue = JOptionPane.showOptionDialog(null,
+        ImageIcon overloadIcon = new ImageIcon(Objects.requireNonNull(ExchangeTask.class.getResource("TzTok-Jad-logo.png")));
+        returnValue = JOptionPane.showOptionDialog(f,
                 "<html><b style =\"color:red;\">Features:</b></html> \n"
                         + "Teleportation to Bank \n"
                         + "Potion Support (Ranging, Prayer, Defence) \n"
@@ -32,7 +30,20 @@ public class ExchangeTask extends WindowAdapter {
                 JOptionPane.WARNING_MESSAGE, 0, overloadIcon, buttons, buttons[0]);
     }
 
+    public static void prayerOptions() {
+        String[] buttons = { "Eagle Eye", "Rigour" };
+
+        ImageIcon overloadIcon = new ImageIcon(Objects.requireNonNull(ExchangeTask.class.getResource("TzTok-Jad-logo.png")));
+        returnPrayer = JOptionPane.showOptionDialog(f,
+                "<html><b style =\"color:red;\">Choose which prayer to use?</b></html> \n"
+                        + "If you have unlocked Rigour prayer choose corresponding option \n"
+                        + "please choose corresponding option below. \n",
+                "Overload Scripts - Jad Slayer",
+                JOptionPane.WARNING_MESSAGE, 0, overloadIcon, buttons, buttons[0]);
+    }
+
     public static void main(String[] args) {
         ExchangeDialogue();
+        prayerOptions();
     }
 }
