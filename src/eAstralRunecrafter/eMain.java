@@ -18,8 +18,15 @@ import simple.robot.script.Script;
 import simple.hooks.simplebot.teleporter.Teleporter;
 import simple.robot.utils.WorldArea;
 
-@ScriptManifest(author = "Esmaabi", category = Category.RUNECRAFTING, description = "Crafts astral runes in most effective way to train Runecrafting!<br> You must set last-preset to full inventory of pure essence.<br> Start anywhere. <br> Supported home in Edge or in Donor Zone", discord = "Esmaabi#5752",
-        name = "eAstralRunecrafter", servers = { "Zaros" }, version = "2")
+@ScriptManifest(author = "Esmaabi", category = Category.RUNECRAFTING, description =
+        "<br><br>Crafts astral runes in most effective way to train Runecrafting!<br><br>"
+        + "<b>Features:</b><br>"
+        + "Start <b>anywhere</b>.<br>"
+        + "You must set <b>last-preset</b> to full inventory of essences.<br> "
+        + "Supported home in <b>Edge</b> or in <b>Donor Zone</b>.<br>"
+        + "Supported <b>Daeyalt essences</b>! ",
+        discord = "Esmaabi#5752",
+        name = "eAstralRunecrafter", servers = { "Zaros" }, version = "2.1")
 
 public class eMain extends Script{
     //coordinates
@@ -48,6 +55,8 @@ public class eMain extends Script{
         currentExp = this.ctx.skills.experience(SimpleSkills.Skills.RUNECRAFT);// for actions counter by xp drop
         count = 0;
         firstTeleport = false;
+        ctx.viewport.angle(180);
+        ctx.viewport.pitch(true);
 
         this.ctx.updateStatus("----------------------");
         this.ctx.updateStatus("  eAstralRunecrafter  ");
@@ -57,7 +66,7 @@ public class eMain extends Script{
 
     @Override
     public void onProcess() {
-        if (firstTeleport == false) {
+        if (!firstTeleport) {
             if (!teleporter.opened()) {
                 status = "First teleport to altar";
                 ctx.magic.castSpellOnce("Minigame Teleport");
@@ -69,15 +78,15 @@ public class eMain extends Script{
             }
         } else {
             if (EDGE.containsPoint(ctx.players.getLocal().getLocation()) || DONOR.containsPoint(ctx.players.getLocal().getLocation())) {
-                if (ctx.inventory.populate().filter(7936).population() == 0) {
+                if (ctx.inventory.populate().filter(7936, 24704).isEmpty()) {
                     status = "Bank found";
-                    SimpleObject bank = ctx.objects.populate().filter("Bank booth").nextNearest();
+                    SimpleObject bank = ctx.objects.populate().filter("Bank booth").nearest().next();
                     if (bank != null && bank.validateInteractable()) {
                         status = "Getting last-preset";
                         bank.click("Last-preset", "Bank booth");
-                        ctx.sleepCondition(() -> ctx.pathing.inMotion(), 1200);
+                        ctx.onCondition(() -> ctx.players.getLocal().isAnimating(), 5000);
                     }
-                } else {
+                } else if (!ctx.inventory.populate().filter(7936, 24704).isEmpty()) {
                     status = "Teleporting to altar";
                     SimpleWidget homeTeleport = ctx.widgets.getWidget(218, 6);//home teleport
                     ctx.game.tab(Game.Tab.MAGIC);
@@ -85,16 +94,16 @@ public class eMain extends Script{
                     ctx.onCondition(() -> ASTRAL.containsPoint(ctx.players.getLocal().getLocation()), 2400);
                 }
             } else if (ASTRAL.containsPoint(ctx.players.getLocal().getLocation())) {
-                if (ctx.inventory.populate().filter(7936).population() == 0) {
+                if (ctx.inventory.populate().filter(7936, 24704).isEmpty()) {
                     status = "Teleporting to home";
                     ctx.magic.castSpellOnce("Home Teleport");
                 } else {
                     status = "Searching for altar";
-                    SimpleObject altar = ctx.objects.populate().filter(34771).nextNearest();
+                    SimpleObject altar = ctx.objects.populate().filter(34771).nearest().next();
                     if (altar != null && altar.validateInteractable()) {
                         status = "Crafting runes";
                         altar.click("Craft-rune", "Altar");
-                        ctx.sleepCondition(() -> ctx.pathing.inMotion(), 1200);
+                        ctx.onCondition(() -> ctx.players.getLocal().isAnimating(), 5000);
                     }
                 }
             }
