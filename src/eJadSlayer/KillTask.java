@@ -5,10 +5,13 @@ import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.imageio.ImageIO;
+
 import net.runelite.api.coords.WorldPoint;
 import simple.hooks.filters.SimpleBank;
 import simple.hooks.filters.SimplePrayers.Prayers;
@@ -25,8 +28,8 @@ import simple.hooks.simplebot.teleporter.Teleporter;
 import simple.hooks.wrappers.*;
 import simple.robot.api.ClientContext;
 
-@ScriptManifest(author = "Overload, reworked by Esmaabi", category = Category.MINIGAMES, description = "Please disable all plugins.<br>Start anywhere with:<br> 1) ranged setup &<br> 2) ranging potions(4), Super defence potions(4) and Prayer potions(4) in bank.",
-        name = "Jad Slayer v2", servers = {"Zaros"}, version = "2.0", discord = "Esmaabi#5752" )
+@ScriptManifest(author = "Overload, reworked by Esmaabi", category = Category.MINIGAMES, description = "Please disable all plugins.<br>Start anywhere with:<br> 1) ranged setup &<br> 2) ranging potions(4), Super defence potions(4) and Prayer potions(4) in bank.<br><br> Supported rigour prayer and special attacks",
+        name = "Jad Slayer v2", servers = {"Zaros"}, version = "2.1", discord = "Esmaabi#5752" )
 
 public class KillTask extends TaskScript implements LoopingScript {
 
@@ -37,9 +40,6 @@ public class KillTask extends TaskScript implements LoopingScript {
     private int jadKilled = 0;
     private int playerDeath = 0;
     static int space = KeyEvent.VK_SPACE;
-    static int VK_1 = KeyEvent.VK_1;
-
-    //private int fireCape = ctx.inventory.populate().filter("Fire cape").population();
 
     //Configs
     private static final Random r = new Random();
@@ -48,6 +48,7 @@ public class KillTask extends TaskScript implements LoopingScript {
     private BufferedImage backgroundImage;
     boolean jadHasBeenKilled = false;
     boolean prayerRigour = false;
+    static String foodName;
 
     //NPC
     private SimpleNpc jad;
@@ -131,6 +132,7 @@ public class KillTask extends TaskScript implements LoopingScript {
         playerState = State.WAITING;
         ctx.viewport.angle(180);
         ctx.viewport.pitch(true);
+        foodName = null;
 
         //main gui
         ExchangeTask.ExchangeDialogue();
@@ -153,6 +155,15 @@ public class KillTask extends TaskScript implements LoopingScript {
                 prayerRigour = true;
             } else {
                 prayerRigour = false;
+            }
+        }
+
+        if (ExchangeTask.returnValue == 0) {
+            ExchangeTask.foodOptions();
+            if (ExchangeTask.returnItem != null) {
+                foodName = ExchangeTask.returnItem;
+            } else {
+                foodName = null;
             }
         }
     }
@@ -202,15 +213,25 @@ public class KillTask extends TaskScript implements LoopingScript {
         playerState = State.BANKING;
     }
 
+    public static String currentTime() {
+        return LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
+    }
+
     @Override
     public void onTerminate() {
-        // TODO Auto-generated method stub
+        foodName = null;
+        jadKilled = 0;
+        playerState = State.WAITING;
 
+        this.ctx.updateStatus("-------------- " + currentTime() + " --------------");
+        this.ctx.updateStatus("-----------------------------------");
+        this.ctx.updateStatus("       Thank You & Good Luck!      ");
+        this.ctx.updateStatus("-----------------------------------");
     }
 
     public void eatTask() {
         //Food handling
-        String[] foodItems = {"Shark", "Lobster", "Monkfish", "pineapple", "pizza", "fish"};
+        String[] foodItems = {"Shark", "Lobster", "Monkfish", "pineapple", "pizza", "fish", "angler", "Monk", "Sword", "Tuna" , "karambwan"};
         SimpleItem food = getItem(foodItems);
 
         if (ctx.combat.healthPercent() <= 40 && food != null && ctx.combat.health() > 0) {
@@ -295,11 +316,18 @@ public class KillTask extends TaskScript implements LoopingScript {
     }
 
     private void protectFromMelee() {
-        playerState = State.PRAYERS;
-        ctx.prayers.prayer(Prayers.PROTECT_FROM_MELEE, true);
-        ctx.prayers.prayer(Prayers.STEEL_SKIN, true);
-        ctx.prayers.prayer(Prayers.EAGLE_EYE, true);
-        ctx.updateStatus("Melee detected. Distancing player from jad.");
+        if (!prayerRigour) {
+            playerState = State.PRAYERS;
+            ctx.prayers.prayer(Prayers.PROTECT_FROM_MELEE, true);
+            ctx.prayers.prayer(Prayers.STEEL_SKIN, true);
+            ctx.prayers.prayer(Prayers.EAGLE_EYE, true);
+            ctx.updateStatus("Melee detected. Distancing player from jad.");
+        } else {
+            playerState = State.PRAYERS;
+            ctx.prayers.prayer(Prayers.PROTECT_FROM_MELEE, true);
+            ctx.prayers.prayer(Prayers.RIGOUR, true);
+            ctx.updateStatus("Melee detected. Distancing player from jad.");
+        }
     }
 
     private void protectFromRange() {
@@ -412,7 +440,7 @@ public class KillTask extends TaskScript implements LoopingScript {
 
     public void exchangeCapes() {
         SimpleNpc fireCapeNPC = ctx.npcs.populate().filter(2180).nearest().next();
-        SimpleObject banker = ctx.objects.populate().filter("Bank Chest").nearest().next(); // Grabs nearest banker at sand crabs
+        SimpleObject banker = ctx.objects.populate().filter("Bank Chest").nearest().next();
 
         if (ctx.inventory.populate().filter(6570).population() == 0) {
             if (banker != null && banker.validateInteractable() && !ctx.bank.bankOpen()) {
@@ -427,10 +455,11 @@ public class KillTask extends TaskScript implements LoopingScript {
                 ctx.bank.closeBank();
                 ctx.onCondition(() -> ctx.inventory.population() >= 1, 2400);
             } else if (ctx.bank.bankOpen() && ctx.bank.populate().filter(6570).population() == 0 && ctx.inventory.populate().filter(6570).population() == 0) {
-                ctx.updateStatus("No fire capes detected in bank, time to kill Jad.");
+                ctx.updateStatus("No fire capes detected in bank");
                 ctx.bank.closeBank();
                 ctx.sleep(1000);
-                playerState = State.BANKING;
+                ctx.updateStatus("Stopping bot");
+                ctx.stopScript();
             }
         } else {
             if (fireCapeNPC.validateInteractable() && fireCapeNPC != null && !ctx.dialogue.dialogueOpen()) {

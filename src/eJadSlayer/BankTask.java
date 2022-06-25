@@ -9,6 +9,7 @@ import simple.hooks.wrappers.SimpleObject;
 import simple.robot.api.ClientContext;
 import simple.robot.utils.WorldArea;
 
+import static eJadSlayer.KillTask.foodName;
 import static eJadSlayer.KillTask.teleporter;
 
 public class BankTask extends Task {
@@ -66,7 +67,7 @@ public class BankTask extends Task {
     }
 
     private void openBank() {
-        if (ctx.inventory.populate().filter(2301).population() <= 4
+        if (ctx.inventory.populate().filter(foodName).population() <= 4
                 || ctx.inventory.populate().filter(prayerPotions).population() <= 2
                 || ctx.inventory.populate().filter(rangingPotions).population() <= 1
                 || ctx.inventory.populate().filter(defencePotions).population() <= 1
@@ -90,8 +91,8 @@ public class BankTask extends Task {
                     ctx.bank.withdraw(2442, 2);
                 } else if (ctx.inventory.populate().filter(2434).population() != 5) {
                     ctx.bank.withdraw(2434, 5);
-                } else if (ctx.inventory.populate().filter(2301).population() != 18) {
-                    ctx.bank.withdraw(2301, 18);
+                } else if (ctx.inventory.populate().filter(foodName).population() != 17) {
+                    ctx.bank.withdraw(foodName, 17);
                 } else {
                     ctx.bank.closeBank();
                 }
@@ -130,7 +131,7 @@ public class BankTask extends Task {
         if (!jadEntrance.containsPoint(ctx.players.getLocal().getLocation())) {
             ctx.sleep(KillTask.randomSleep);
             teleportToTzhaar();
-        } else if (ctx.inventory.populate().filter(2301).population() <= 4
+        } else if (ctx.inventory.populate().filter(foodName).population() <= 4
                 || ctx.inventory.populate().filter(2434).population() <= 2
                 || ctx.inventory.population() == 28) {
             openBank();
