@@ -25,7 +25,7 @@ import static eDonorCookingZaros.eGui.eGuiDialogueTarget;
                 "<li>Zoom out to <b>maximum</b>;</li>" +
                 "<li>Included <b>anti-ban</b> features!</li></ul>",
         discord = "Esmaabi#5752",
-        name = "eDonorCookingZaros", servers = { "Zaros" }, version = "1.2")
+        name = "eDonorCookingZaros", servers = { "Zaros" }, version = "1.5")
 
 public class eMain extends Script{
 
@@ -40,6 +40,7 @@ public class eMain extends Script{
     static String status = null;
     private long lastAnimation = -1;
     static String fishName;
+    boolean firstCook;
     public static int randomSleeping(int minimum, int maximum) {
         return (int)(Math.random() * (maximum - minimum)) + minimum;
     }
@@ -60,8 +61,9 @@ public class eMain extends Script{
         fishName = null;
         ctx.viewport.angle(180);
         ctx.viewport.pitch(true);
+        firstCook = false;
 
-        // choosing NPC
+        // choosing food to cook
         eGuiDialogueTarget();
         if (eGui.returnItem != null) {
             fishName = eGui.returnItem;
@@ -77,32 +79,47 @@ public class eMain extends Script{
 
     @Override
     public void onProcess() {
-        if (COOKING.containsPoint(ctx.players.getLocal().getLocation())) {
-            if (ctx.inventory.populate().filter(fishName).population() == 0) {
-                status = "Starting banking task";
-                openingBank();
-            } else if (ctx.inventory.populate().filter(fishName).population() > 0) {
-                status = "Cooking " + fishName.toLowerCase();
-                if (!ctx.players.getLocal().isAnimating() && (System.currentTimeMillis() > (lastAnimation + 3000))) {
-                    cookingTask();
-                } else if (ctx.players.getLocal().isAnimating()) {
-                    lastAnimation = System.currentTimeMillis();
+        if (fishName != null) {
+            if (!firstCook) {
+                if (ctx.inventory.populate().filter(fishName).population() == 0) {
+                    status = "Getting fish from bank";
+                    openingBankInstant();
+                } else {
+                    status = "Cooking " + fishName.toLowerCase();
+                    cookingTaskInstant();
                 }
+
             } else {
-                ctx.updateStatus(currentTime() + " Unknown error -> restarting");
-                openingBank();
-            }
+                if (COOKING.containsPoint(ctx.players.getLocal().getLocation())) {
+                    if (ctx.inventory.populate().filter(fishName).population() == 0) {
+                        status = "Starting banking task";
+                        openingBank();
+                    } else if (ctx.inventory.populate().filter(fishName).population() > 0) {
+                        status = "Cooking " + fishName.toLowerCase();
+                        if (!ctx.players.getLocal().isAnimating() && (System.currentTimeMillis() > (lastAnimation + 4000))) {
+                            cookingTask();
+                        } else if (ctx.players.getLocal().isAnimating()) {
+                            lastAnimation = System.currentTimeMillis();
+                        }
+                    } else {
+                        ctx.updateStatus(currentTime() + " Unknown error -> restarting");
+                        openingBank();
+                    }
 
-            if (ctx.pathing.energyLevel() > 30 && !ctx.pathing.running()) {
-                ctx.pathing.running(true);
-            }
+                    if (ctx.pathing.energyLevel() > 30 && !ctx.pathing.running()) {
+                        ctx.pathing.running(true);
+                    }
 
+                } else {
+                    status = "Player not in cooking area";
+                    ctx.updateStatus(currentTime() + " Player not in cooking area");
+                    ctx.updateStatus(currentTime() + " Stopping script");
+                    ctx.sleep(2400);
+                    ctx.stopScript();
+                }
+            }
         } else {
-            status = "Player not in cooking area";
-            ctx.updateStatus(currentTime() + " Player not in cooking area");
-            ctx.updateStatus(currentTime() + " Stopping script");
-            ctx.sleep(2400);
-            ctx.stopScript();
+            ctx.updateStatus("Choose fish to cook");
         }
     }
     public void cookingTask() {
@@ -123,11 +140,37 @@ public class eMain extends Script{
         }
     }
 
+    public void cookingTaskInstant() {
+        SimpleObject cookingFire = ctx.objects.populate().filter(4265).nearest().next();
+        SimpleItem fishInv = ctx.inventory.populate().filter(fishName).next();
+        if (fishInv != null && cookingFire != null && fishInv.validateInteractable() && cookingFire.validateInteractable() && !ctx.players.getLocal().isAnimating()) {
+            status = "Cooking " + fishName.toLowerCase();
+            fishInv.click(0);
+            ctx.sleep(randomSleeping(600, 1200));
+            cookingFire.click("Use");
+            ctx.onCondition(() -> ctx.dialogue.dialogueOpen(), 6200);
+            if (ctx.dialogue.dialogueOpen()) {
+                ctx.dialogue.clickDialogueOption(1);
+                ctx.sleepCondition(() -> ctx.players.getLocal().isAnimating(), randomSleeping(6200, 12600));
+                firstCook = true;
+            }
+        }
+    }
+
     public void openingBank() {
         SimpleObject bankChest = ctx.objects.populate().filter("Bank chest").filterHasAction("Last-preset").nearest().next();
         if (bankChest != null && bankChest.validateInteractable()) {
             status = "Sleeping to bank (anti-ban)";
             ctx.sleep(randomSleeping(6200, 16400));
+            status = "Refilling " + fishName.toLowerCase();
+            bankChest.click("Last-preset", "Bank chest");
+            ctx.sleepCondition(() -> ctx.inventory.populate().filter(fishName).population() > 0, randomSleeping(4200, 12600));
+        }
+    }
+
+    public void openingBankInstant() {
+        SimpleObject bankChest = ctx.objects.populate().filter("Bank chest").filterHasAction("Last-preset").nearest().next();
+        if (bankChest != null && bankChest.validateInteractable()) {
             status = "Refilling " + fishName.toLowerCase();
             bankChest.click("Last-preset", "Bank chest");
             ctx.sleepCondition(() -> ctx.inventory.populate().filter(fishName).population() > 0, randomSleeping(4200, 12600));
