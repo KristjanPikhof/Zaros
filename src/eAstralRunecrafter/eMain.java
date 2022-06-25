@@ -26,7 +26,7 @@ import simple.robot.utils.WorldArea;
         + "Supported home in <b>Edge</b> or in <b>Donor Zone</b>.<br>"
         + "Supported <b>Daeyalt essences</b>!",
         discord = "Esmaabi#5752",
-        name = "eAstralRunecrafter", servers = { "Zaros" }, version = "2.2")
+        name = "eAstralRunecrafter", servers = { "Zaros" }, version = "2.3")
 
 public class eMain extends Script{
     //coordinates
@@ -87,7 +87,7 @@ public class eMain extends Script{
                     SimpleObject bank = ctx.objects.populate().filter("Bank booth").nearest().next();
                     if (bank != null && bank.validateInteractable()) {
                         status = "Sleeping to bank (anti-ban)";
-                        ctx.sleep(randomSleeping(200, 6700));
+                        ctx.sleep(randomSleeping(200, 1800));
                         status = "Getting last-preset";
                         bank.click("Last-preset", "Bank booth");
                         ctx.onCondition(() -> ctx.players.getLocal().isAnimating(), 5000);
@@ -107,12 +107,13 @@ public class eMain extends Script{
                     ctx.sleep(randomSleeping(200, 6700));
                     status = "Teleporting to home";
                     ctx.magic.castSpellOnce("Home Teleport");
+                    ctx.onCondition(() -> (EDGE.containsPoint(ctx.players.getLocal().getLocation()) || DONOR.containsPoint(ctx.players.getLocal().getLocation())), 5000);
                 } else {
                     status = "Searching for altar";
                     SimpleObject altar = ctx.objects.populate().filter(34771).nearest().next();
                     if (altar != null && altar.validateInteractable()) {
                         status = "Sleeping to craft (anti-ban)";
-                        ctx.sleep(randomSleeping(200, 6700));
+                        ctx.sleep(randomSleeping(200, 3700));
                         status = "Crafting runes";
                         altar.click("Craft-rune", "Altar");
                         ctx.onCondition(() -> ctx.players.getLocal().isAnimating(), 5000);
@@ -188,7 +189,7 @@ public class eMain extends Script{
         s %= 60L;
         m %= 60L;
         h %= 24L;
-        return String.format("%02d:%02d:%02d", new Object[] { Long.valueOf(h), Long.valueOf(m), Long.valueOf(s) });
+        return String.format("%02d:%02d:%02d", h, m, s);
     }
 
 }
