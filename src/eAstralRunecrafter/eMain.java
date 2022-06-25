@@ -24,9 +24,9 @@ import simple.robot.utils.WorldArea;
         + "Start <b>anywhere</b>.<br>"
         + "You must set <b>last-preset</b> to full inventory of essences.<br> "
         + "Supported home in <b>Edge</b> or in <b>Donor Zone</b>.<br>"
-        + "Supported <b>Daeyalt essences</b>! ",
+        + "Supported <b>Daeyalt essences</b>!",
         discord = "Esmaabi#5752",
-        name = "eAstralRunecrafter", servers = { "Zaros" }, version = "2.1")
+        name = "eAstralRunecrafter", servers = { "Zaros" }, version = "2.2")
 
 public class eMain extends Script{
     //coordinates
@@ -44,6 +44,9 @@ public class eMain extends Script{
     private int currentExp;
     boolean firstTeleport;
 
+    public static int randomSleeping(int minimum, int maximum) {
+        return (int)(Math.random() * (maximum - minimum)) + minimum;
+    }
 
     @Override
     public void onExecute() {
@@ -58,6 +61,7 @@ public class eMain extends Script{
         ctx.viewport.angle(180);
         ctx.viewport.pitch(true);
 
+        this.ctx.updateStatus("-------------- " + currentTime() + " --------------");
         this.ctx.updateStatus("----------------------");
         this.ctx.updateStatus("  eAstralRunecrafter  ");
         this.ctx.updateStatus("----------------------");
@@ -82,11 +86,15 @@ public class eMain extends Script{
                     status = "Bank found";
                     SimpleObject bank = ctx.objects.populate().filter("Bank booth").nearest().next();
                     if (bank != null && bank.validateInteractable()) {
+                        status = "Sleeping to bank (anti-ban)";
+                        ctx.sleep(randomSleeping(200, 6700));
                         status = "Getting last-preset";
                         bank.click("Last-preset", "Bank booth");
                         ctx.onCondition(() -> ctx.players.getLocal().isAnimating(), 5000);
                     }
                 } else if (!ctx.inventory.populate().filter(7936, 24704).isEmpty()) {
+                    status = "Sleeping to teleport (anti-ban)";
+                    ctx.sleep(randomSleeping(200, 6700));
                     status = "Teleporting to altar";
                     SimpleWidget homeTeleport = ctx.widgets.getWidget(218, 6);//home teleport
                     ctx.game.tab(Game.Tab.MAGIC);
@@ -95,12 +103,16 @@ public class eMain extends Script{
                 }
             } else if (ASTRAL.containsPoint(ctx.players.getLocal().getLocation())) {
                 if (ctx.inventory.populate().filter(7936, 24704).isEmpty()) {
+                    status = "Sleeping to teleport (anti-ban)";
+                    ctx.sleep(randomSleeping(200, 6700));
                     status = "Teleporting to home";
                     ctx.magic.castSpellOnce("Home Teleport");
                 } else {
                     status = "Searching for altar";
                     SimpleObject altar = ctx.objects.populate().filter(34771).nearest().next();
                     if (altar != null && altar.validateInteractable()) {
+                        status = "Sleeping to craft (anti-ban)";
+                        ctx.sleep(randomSleeping(200, 6700));
                         status = "Crafting runes";
                         altar.click("Craft-rune", "Altar");
                         ctx.onCondition(() -> ctx.players.getLocal().isAnimating(), 5000);
@@ -126,6 +138,7 @@ public class eMain extends Script{
         this.count = 0;
         this.firstTeleport = false;
 
+        this.ctx.updateStatus("-------------- " + currentTime() + " --------------");
         this.ctx.updateStatus("----------------------");
         this.ctx.updateStatus("Thank You & Good Luck!");
         this.ctx.updateStatus("----------------------");
@@ -148,9 +161,9 @@ public class eMain extends Script{
         Color PhilippineRed = new Color(196, 18, 48);
         Color RaisinBlack = new Color(35, 31, 32, 127);
         g.setColor(RaisinBlack);
-        g.fillRect(5, 120, 200, 110);
+        g.fillRect(5, 120, 205, 110);
         g.setColor(PhilippineRed);
-        g.drawRect(5, 120, 200, 110);
+        g.drawRect(5, 120, 205, 110);
         g.setColor(PhilippineRed);
         g.drawString("eAstralRunecrafter by Esmaabi", 15, 135);
         g.setColor(Color.WHITE);
