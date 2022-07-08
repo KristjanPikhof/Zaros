@@ -131,7 +131,6 @@ public class eCanifisR extends Task {
                     ctx.onCondition(() -> cached < ctx.inventory.populate().filter(11849).population(true), 250, 12);
                 }
             }
-            return;
         }
 
         if (START.containsPoint(ctx.players.getLocal().getLocation())) {
@@ -223,7 +222,6 @@ public class eCanifisR extends Task {
                 eMain.count++;
             }
         }
-
     }
 
 

@@ -1,53 +1,70 @@
 package eAioAgilityBot;
 
 import eAioAgilityBot.tasks.eCanifisR;
-import eAioAgilityBot.eGui;
+import eAioAgilityBot.tasks.eSeersR;
+import eAioAgilityBot.tasks.ePollnivneachR;
 import simple.hooks.filters.SimpleSkills;
 import simple.hooks.scripts.Category;
 import simple.hooks.scripts.ScriptManifest;
 import simple.hooks.scripts.task.TaskScript;
 import simple.hooks.simplebot.ChatMessage;
 import simple.hooks.simplebot.Pathing;
-import simple.hooks.wrappers.SimpleGroundItem;
 
 import java.awt.*;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@ScriptManifest(author = "Esmaabi", category = Category.AGILITY, description = "AIO agility training on rooftops courses", discord = "Esmaabi#5752",
-        name = "eAioAgilityBot", servers = { "Zaros" }, version = "0.1")
+@ScriptManifest(author = "Esmaabi", category = Category.AGILITY, description = "AIO agility training bot for rooftops courses", discord = "Esmaabi#5752",
+        name = "eAioAgilityBotZaros", servers = { "Zaros" }, version = "0.2")
 
 public class eMain extends TaskScript {
 
     private List tasks = new ArrayList();
 
     public static eAioAgilityBot.eMain.State courseName;
-    public String status;
-    public long startTime;
-    public int startExperience, startMarks;
+    public static String status = null;
+    private long startTime = 0L;
+    private long startingSkillLevel;
+    private long startingSkillExp;
+    public static int startMarks, totalMarks;
     public static int count;
     public enum State {
         CANIFIS,
+        SEERS,
+        POLLNIVNEACH,
         WAITING,
     }
 
     @Override
     public void onExecute() {
-        tasks.addAll(Arrays.asList(new eCanifisR(ctx)));// Adds our tasks to our {task} list for execution
+        tasks.addAll(Arrays.asList(new eCanifisR(ctx), new eSeersR(ctx), new ePollnivneachR(ctx)));// Adds our tasks to our {task} list for execution
 
         System.out.println("Started eAioAgilityBot!");
-        this.startExperience = ctx.skills.experience(SimpleSkills.Skills.AGILITY);
-        this.startMarks = ctx.inventory.populate().filter(11849).population(true);
-        this.startTime = System.currentTimeMillis();
+        startMarks = ctx.inventory.populate().filter(11849).population(true);
+        startTime = System.currentTimeMillis(); //paint
+        this.startingSkillLevel = this.ctx.skills.realLevel(SimpleSkills.Skills.AGILITY);//paint
+        this.startingSkillExp = this.ctx.skills.experience(SimpleSkills.Skills.AGILITY);//paint
         count = 0;
+        totalMarks = 0;
+        status = "Setting up script";
 
         eAioAgilityBot.eGui.eGuiDialogue();
-        if (eGui.courseName == 0) {
+        if (eGui.courseName == "Canifis") {
             courseName = eAioAgilityBot.eMain.State.CANIFIS;
+        } else if (eGui.courseName == "Seers") {
+            courseName = State.SEERS;
+        } else if (eGui.courseName == "Pollnivneach") {
+            courseName = eAioAgilityBot.eMain.State.POLLNIVNEACH;
         } else {
             courseName = State.WAITING;
         }
+    }
+
+    public static String currentTime() {
+        return LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
     }
 
     @Override
@@ -74,47 +91,68 @@ public class eMain extends TaskScript {
             pathing.running(true);
             ctx.sleep(200);
         }
-
-        if (!ctx.groundItems.populate().filter(11849).filter((i) -> pathing.reachable(i.getLocation())).isEmpty()) {
-            final SimpleGroundItem i = ctx.groundItems.nearest().next();
-            ctx.updateStatus("Picking up MOG");
-            if (i != null && i.validateInteractable()) {
-                final int cached = ctx.inventory.populate().filter(11849).population(true);
-                if (i.click("Take")) {
-                    ctx.onCondition(() -> cached < ctx.inventory.populate().filter(11849).population(true), 250, 12);
-                }
-            }
-            return;
-        }
     }
 
     @Override
     public void onTerminate() {
         courseName = State.WAITING;
-
-    }
-    @Override
-    public void paint(Graphics g1) {
-        Graphics2D g = (Graphics2D) g1;
-        g.setColor(Color.BLACK);
-        g.fillRect(5, 2, 192, 86);
-        g.setColor(Color.decode("#D93B26"));
-        g.drawRect(5, 2, 192, 86);
-        g.drawLine(8, 24, 194, 24);
-
-        g.setColor(Color.decode("#1C6497"));
-        g.drawString("eAioAgilityBot v. " + "0.1", 12, 20);
-        g.drawString("Time: " + ctx.paint.formatTime(System.currentTimeMillis() - startTime), 14, 42);
-        g.drawString("Status: " + status, 14, 56);
-        int totalExp = ctx.skills.experience(SimpleSkills.Skills.AGILITY) - startExperience;
-        g.drawString("XP: " + ctx.paint.formatTime(totalExp) + " (" + ctx.paint.valuePerHour(totalExp, startTime) + ")", 14, 70);
-        int totalMarks = ctx.inventory.populate().filter(11849).population(true) - startMarks;
-        g.drawString("MOG: " + ctx.paint.formatTime(totalMarks) + " (" + ctx.paint.valuePerHour(totalMarks, startTime) + ")", 14, 84);
+        this.startingSkillLevel = 0L;
+        this.startingSkillExp = 0L;
+        count = 0;
+        totalMarks = 0;
 
     }
 
     @Override
-    public void onChatMessage(ChatMessage e) {
+    public void paint(Graphics g) {
+        Color PhilippineRed = new Color(196, 18, 48);
+        Color RaisinBlack = new Color(35, 31, 32, 127);
+        g.setColor(RaisinBlack);
+        g.fillRect(5, 120, 200, 110);
+        g.setColor(PhilippineRed);
+        g.drawRect(5, 120, 200, 110);
+        g.setColor(PhilippineRed);
+        g.drawString("eAioAgilityBot by Esmaabi", 15, 135);
+        g.setColor(Color.WHITE);
+        long runTime = System.currentTimeMillis() - this.startTime;
+        long currentSkillLevel = this.ctx.skills.realLevel(SimpleSkills.Skills.AGILITY);
+        long currentSkillExp = this.ctx.skills.experience(SimpleSkills.Skills.AGILITY);
+        long SkillLevelsGained = currentSkillLevel - this.startingSkillLevel;
+        long SkillExpGained = currentSkillExp - this.startingSkillExp;
+        long SkillexpPhour = (int)((SkillExpGained * 3600000D) / runTime);
+        totalMarks = ctx.inventory.populate().filter(11849).population(true) - startMarks;
+        g.drawString("Runtime: " + formatTime(runTime), 15, 150);
+        g.drawString("Starting Level: " + this.startingSkillLevel + " (+" + SkillLevelsGained + ")" + " Current: " + currentSkillLevel, 15, 165);
+        //g.drawString("Current Level: " + currentSkillLevel, 15, 180);
+        g.drawString("MOG collected: " + totalMarks + " (" + ctx.paint.valuePerHour(totalMarks, startTime) + ")", 15, 180);
+        g.drawString("Exp gained: " + SkillExpGained + " (" + (SkillexpPhour / 1000L) + "k" + " xp/h)", 15, 195);
+        g.drawString("Laps count: " + count, 15, 210);
+        g.drawString("Status: " + status, 15, 225);
+    }
+
+    @Override
+    public void onChatMessage(ChatMessage m) {
+        if (m.getMessage() != null) {
+            String message = m.getMessage().toLowerCase();
+            if (message.contains(ctx.players.getLocal().getName().toLowerCase())) {
+                ctx.updateStatus(currentTime() + " Someone asked for you");
+                ctx.updateStatus(currentTime() + " Stopping script");
+                ctx.stopScript();
+            } else if (message.contains("lap count is")) {
+                count++;
+            }
+        }
+    }
+
+
+    private String formatTime(long ms) {
+        long s = ms / 1000L;
+        long m = s / 60L;
+        long h = m / 60L;
+        s %= 60L;
+        m %= 60L;
+        h %= 24L;
+        return String.format("%02d:%02d:%02d", h, m, s);
     }
 
 }
