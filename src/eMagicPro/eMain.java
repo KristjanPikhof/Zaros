@@ -25,7 +25,7 @@ import simple.robot.script.Script;
         + "1. You must select autocast spell from combat tab;<br>"
         + "2. You must magic attack: <b>-65</b> & auto retaliate activated;<br>"
         + "3. Also have required runes in inventory (and items if alching).<br>", discord = "Esmaabi#5752",
-        name = "eMagicPro", servers = { "Zaros" }, version = "3.1")
+        name = "eMagicProZaros", servers = { "Zaros" }, version = "3.1")
 
 public class eMain extends Script{
 
