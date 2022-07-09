@@ -10,7 +10,7 @@ public class eGui extends WindowAdapter {
     public static String courseName;
 
     public static void eGuiDialogue() {
-        String[] buttons = new String[] {"Canifis", "Seers", "Pollnivneach"};
+        String[] buttons = new String[] {"Canifis", "Seers", "Pollnivneach", "Rellekka"};
 
         ImageIcon eIcon = new ImageIcon(Objects.requireNonNull(eGui.class.getResource("mark-of-grace-logo.png")));
 

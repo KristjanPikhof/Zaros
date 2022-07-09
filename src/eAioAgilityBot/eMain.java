@@ -1,6 +1,7 @@
 package eAioAgilityBot;
 
 import eAioAgilityBot.tasks.eCanifisR;
+import eAioAgilityBot.tasks.eRellekkaR;
 import eAioAgilityBot.tasks.eSeersR;
 import eAioAgilityBot.tasks.ePollnivneachR;
 import simple.hooks.filters.SimpleSkills;
@@ -18,7 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @ScriptManifest(author = "Esmaabi", category = Category.AGILITY, description = "AIO agility training bot for rooftops courses", discord = "Esmaabi#5752",
-        name = "eAioAgilityBotZaros", servers = { "Zaros" }, version = "0.2")
+        name = "eAioAgilityBotZaros", servers = { "Zaros" }, version = "0.3")
 
 public class eMain extends TaskScript {
 
@@ -35,12 +36,18 @@ public class eMain extends TaskScript {
         CANIFIS,
         SEERS,
         POLLNIVNEACH,
+        RELLEKKA,
         WAITING,
     }
 
     @Override
     public void onExecute() {
-        tasks.addAll(Arrays.asList(new eCanifisR(ctx), new eSeersR(ctx), new ePollnivneachR(ctx)));// Adds our tasks to our {task} list for execution
+        tasks.addAll(Arrays.asList(
+                new eCanifisR(ctx),
+                new eSeersR(ctx),
+                new ePollnivneachR(ctx),
+                new eRellekkaR(ctx)
+        ));// Adds our tasks to our {task} list for execution
 
         System.out.println("Started eAioAgilityBot!");
         startMarks = ctx.inventory.populate().filter(11849).population(true);
@@ -51,6 +58,9 @@ public class eMain extends TaskScript {
         totalMarks = 0;
         status = "Setting up script";
 
+        ctx.viewport.angle(0);
+        ctx.viewport.pitch(true);
+
         eAioAgilityBot.eGui.eGuiDialogue();
         if (eGui.courseName == "Canifis") {
             courseName = eAioAgilityBot.eMain.State.CANIFIS;
@@ -58,6 +68,8 @@ public class eMain extends TaskScript {
             courseName = State.SEERS;
         } else if (eGui.courseName == "Pollnivneach") {
             courseName = eAioAgilityBot.eMain.State.POLLNIVNEACH;
+        } else if (eGui.courseName == "Rellekka") {
+            courseName = eAioAgilityBot.eMain.State.RELLEKKA;
         } else {
             courseName = State.WAITING;
         }
