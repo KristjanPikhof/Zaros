@@ -115,7 +115,7 @@ public class eCanifisR extends Task {
 
         if (START.containsPoint(ctx.players.getLocal().getLocation())) {
             eMain.status = "Climbing tree";
-            final SimpleObject o = ctx.objects.populate().filter("Tall tree").filterHasAction("Climb").nearest().next();
+            final SimpleObject o = ctx.objects.populate().filter(14843).filterHasAction("Climb").nearest().next();
             if (o != null && o.validateInteractable()) {
                 if (o.click("Climb", "Tall tree")) {
                     ctx.onCondition(() -> ctx.pathing.inMotion(), 1200);
@@ -159,7 +159,7 @@ public class eCanifisR extends Task {
             }
 
         } else if (fifthHouse.containsPoint(ctx.players.getLocal().getLocation())) {
-            eMain.status = "Pole-Vault jump";
+            eMain.status = "Pole vaulting";
             final SimpleObject o = ctx.objects.populate().filter(14894).filterHasAction("Vault").nearest().next();
             if (o != null && o.validateInteractable()) {
                 if (o.click("Vault", "Pole-vault")) {

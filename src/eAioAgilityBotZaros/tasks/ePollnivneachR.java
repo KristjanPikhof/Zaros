@@ -114,7 +114,7 @@ public class ePollnivneachR extends Task {
 
         if (startLocation.containsPoint(ctx.players.getLocal().getLocation())) {
             eMain.status = "Climbing basket";
-            final SimpleObject o = ctx.objects.populate().filter("Basket").filterHasAction("Climb-on").nearest().next();
+            final SimpleObject o = ctx.objects.populate().filter(14935).filterHasAction("Climb-on").nearest().next();
             if (o != null && o.validateInteractable()) {
                 if (o.click("Climb-on", "Basket")) {
                     ctx.onCondition(() -> inMotion, 1200);
@@ -122,14 +122,14 @@ public class ePollnivneachR extends Task {
             }
         } else if (firstHouse.containsPoint(ctx.players.getLocal().getLocation())) {
             eMain.status = "Jumping market stall";
-            final SimpleObject o = ctx.objects.populate().filter("Market stall").filterHasAction("Jump-on").nearest().next();
+            final SimpleObject o = ctx.objects.populate().filter(14936).filterHasAction("Jump-on").nearest().next();
             if (o != null && o.validateInteractable()) {
                 if (o.click("Jump-on", "Market stall")) {
                     ctx.onCondition(() -> inMotion, 1200);
                 }
             }
         } else if (secondHouse.containsPoint(ctx.players.getLocal().getLocation()) && !inMotion) {
-            final SimpleObject o = ctx.objects.populate().filter("Banner").filterHasAction("Grab").next();
+            final SimpleObject o = ctx.objects.populate().filter(14937).filterHasAction("Grab").next();
             eMain.status = "Grabbing banner";
             if (o != null && o.validateInteractable()) {
                 if (o.click("Grab", "Banner")) {
@@ -138,7 +138,7 @@ public class ePollnivneachR extends Task {
             }
         } else if (thirdHouse.containsPoint(ctx.players.getLocal().getLocation()) && !inMotion) {
             eMain.status = "Leaping gap";
-            final SimpleObject o = ctx.objects.populate().filter("Gap").filterHasAction("Leap").next();
+            final SimpleObject o = ctx.objects.populate().filter(14938).filterHasAction("Leap").next();
             if (o != null && o.validateInteractable()) {
                 if (o.click("Leap", "Gap")) {
                     ctx.onCondition(() -> ctx.pathing.inMotion(), 1200);
@@ -147,7 +147,7 @@ public class ePollnivneachR extends Task {
 
         } else if (fourthHouse.containsPoint(ctx.players.getLocal().getLocation()) && !inMotion) {
             eMain.status = "Jumping to tree";
-            final SimpleObject o = ctx.objects.populate().filter("Tree").filterHasAction("Jump-to").next();
+            final SimpleObject o = ctx.objects.populate().filter(14939).filterHasAction("Jump-to").next();
             if (o != null && o.validateInteractable()) {
                 if (o.click("Jump-to", "Tree")) {
                     ctx.onCondition(() -> ctx.pathing.inMotion(), 1200);
@@ -156,7 +156,7 @@ public class ePollnivneachR extends Task {
 
         } else if (fifthHouse.containsPoint(ctx.players.getLocal().getLocation()) && !inMotion) {
             eMain.status = "Climbing wall";
-            final SimpleObject o = ctx.objects.populate().filter("Rough wall").filterHasAction("Climb").nearest().next();
+            final SimpleObject o = ctx.objects.populate().filter(14940).filterHasAction("Climb").nearest().next();
             if (o != null && o.validateInteractable()) {
                 if (o.click("Climb", "Rough wall")) {
                     ctx.onCondition(() -> ctx.pathing.inMotion(), 1200);
@@ -165,7 +165,8 @@ public class ePollnivneachR extends Task {
 
         } else if (sixthHouse.containsPoint(ctx.players.getLocal().getLocation()) && !inMotion) {
             eMain.status = "Crossing monkeybars";
-            final SimpleObject o = ctx.objects.populate().filter("Monkeybars").filterHasAction("Cross").nearest().next();
+            //"Monkeybars"
+            final SimpleObject o = ctx.objects.populate().filter(14941).filterHasAction("Cross").nearest().next();
             if (o != null && o.validateInteractable()) {
                 if (o.click("Cross", "Monkeybars")) {
                     ctx.onCondition(() -> ctx.pathing.inMotion(), 1200);
@@ -174,7 +175,7 @@ public class ePollnivneachR extends Task {
 
         } else if (seventhHouse.containsPoint(ctx.players.getLocal().getLocation()) && !inMotion) {
             eMain.status = "Jumping on tree";
-            final SimpleObject o = ctx.objects.populate().filter("Tree").filterHasAction("Jump-on").nearest().next();
+            final SimpleObject o = ctx.objects.populate().filter(14944).filterHasAction("Jump-on").nearest().next();
             if (o != null && o.validateInteractable()) {
                 if (o.click("Jump-on", "Tree")) {
                     ctx.onCondition(() -> ctx.pathing.inMotion(), 1200);
@@ -183,7 +184,7 @@ public class ePollnivneachR extends Task {
 
         } else if (eightHouse.containsPoint(ctx.players.getLocal().getLocation()) && !inMotion) {
             eMain.status = "Jumping to tree";
-            final SimpleObject o = ctx.objects.populate().filter("Drying line").filterHasAction("Jump-to").nearest().next();
+            final SimpleObject o = ctx.objects.populate().filter(14945).filterHasAction("Jump-to").nearest().next();
             if (o != null && o.validateInteractable()) {
                 if (o.click("Jump-to", "Drying line")) {
                     ctx.onCondition(() -> ctx.pathing.inMotion(), 1200);

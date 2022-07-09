@@ -97,7 +97,7 @@ public class eRellekkaR extends Task {
 
         if (startLocation.containsPoint(ctx.players.getLocal().getLocation())) {
             eMain.status = "Climbing wall";
-            final SimpleObject o = ctx.objects.populate().filter("Rough wall").filterHasAction("Climb").nearest().next();
+            final SimpleObject o = ctx.objects.populate().filter(14946).filterHasAction("Climb").nearest().next();
             if (o != null && o.validateInteractable()) {
                 if (o.click("Climb", "Rough wall")) {
                     ctx.onCondition(() -> inMotion, 1200);

@@ -109,7 +109,7 @@ public class eSeersR extends Task {
 
         if (startLocation.containsPoint(ctx.players.getLocal().getLocation())) {
             eMain.status = "Climbing wall";
-            final SimpleObject o = ctx.objects.populate().filter("Wall").filterHasAction("Climb-up").nearest().next();
+            final SimpleObject o = ctx.objects.populate().filter(14927).filterHasAction("Climb-up").nearest().next();
             if (o != null && o.validateInteractable()) {
                 if (o.click("Climb-up", "Wall")) {
                     ctx.onCondition(() -> inMotion, 1200);
@@ -121,7 +121,7 @@ public class eSeersR extends Task {
             final SimpleObject o = ctx.objects.populate().filter(14928).filterHasAction("Jump").nearest().next();
             if (o != null && o.validateInteractable()) {
                 if (o.click("Jump", "Gap")) {
-                    ctx.onCondition(() -> inMotion, 1200);
+                    ctx.onCondition(() -> inMotion, 1800);
                 }
             }
 
