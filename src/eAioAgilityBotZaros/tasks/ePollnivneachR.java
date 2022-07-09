@@ -1,6 +1,6 @@
-package eAioAgilityBot.tasks;
+package eAioAgilityBotZaros.tasks;
 
-import eAioAgilityBot.eMain;
+import eAioAgilityBotZaros.eMain;
 import net.runelite.api.coords.WorldPoint;
 import simple.hooks.scripts.task.Task;
 import simple.hooks.simplebot.Game;
