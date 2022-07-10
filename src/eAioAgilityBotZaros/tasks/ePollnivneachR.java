@@ -86,6 +86,8 @@ public class ePollnivneachR extends Task {
             new WorldPoint(3367, 3000, 0)
     });
 
+    private static String teleportName = "Agility: Pollnivneach Rooftop";
+
     public ePollnivneachR(ClientContext ctx) {
         super(ctx);
     }
@@ -112,97 +114,123 @@ public class ePollnivneachR extends Task {
             }
         }
 
-        if (startLocation.containsPoint(ctx.players.getLocal().getLocation())) {
-            eMain.status = "Climbing basket";
-            final SimpleObject o = ctx.objects.populate().filter(14935).filterHasAction("Climb-on").nearest().next();
-            if (o != null && o.validateInteractable()) {
-                if (o.click("Climb-on", "Basket")) {
-                    ctx.onCondition(() -> inMotion, 1200);
-                }
-            }
-        } else if (firstHouse.containsPoint(ctx.players.getLocal().getLocation())) {
-            eMain.status = "Jumping market stall";
-            final SimpleObject o = ctx.objects.populate().filter(14936).filterHasAction("Jump-on").nearest().next();
-            if (o != null && o.validateInteractable()) {
-                if (o.click("Jump-on", "Market stall")) {
-                    ctx.onCondition(() -> inMotion, 1200);
-                }
-            }
-        } else if (secondHouse.containsPoint(ctx.players.getLocal().getLocation()) && !inMotion) {
-            final SimpleObject o = ctx.objects.populate().filter(14937).filterHasAction("Grab").next();
-            eMain.status = "Grabbing banner";
-            if (o != null && o.validateInteractable()) {
-                if (o.click("Grab", "Banner")) {
-                    ctx.onCondition(() -> ctx.pathing.inMotion(), 1200);
-                }
-            }
-        } else if (thirdHouse.containsPoint(ctx.players.getLocal().getLocation()) && !inMotion) {
-            eMain.status = "Leaping gap";
-            final SimpleObject o = ctx.objects.populate().filter(14938).filterHasAction("Leap").next();
-            if (o != null && o.validateInteractable()) {
-                if (o.click("Leap", "Gap")) {
-                    ctx.onCondition(() -> ctx.pathing.inMotion(), 1200);
-                }
-            }
-
-        } else if (fourthHouse.containsPoint(ctx.players.getLocal().getLocation()) && !inMotion) {
-            eMain.status = "Jumping to tree";
-            final SimpleObject o = ctx.objects.populate().filter(14939).filterHasAction("Jump-to").next();
-            if (o != null && o.validateInteractable()) {
-                if (o.click("Jump-to", "Tree")) {
-                    ctx.onCondition(() -> ctx.pathing.inMotion(), 1200);
-                }
-            }
-
-        } else if (fifthHouse.containsPoint(ctx.players.getLocal().getLocation()) && !inMotion) {
-            eMain.status = "Climbing wall";
-            final SimpleObject o = ctx.objects.populate().filter(14940).filterHasAction("Climb").nearest().next();
-            if (o != null && o.validateInteractable()) {
-                if (o.click("Climb", "Rough wall")) {
-                    ctx.onCondition(() -> ctx.pathing.inMotion(), 1200);
-                }
-            }
-
-        } else if (sixthHouse.containsPoint(ctx.players.getLocal().getLocation()) && !inMotion) {
-            eMain.status = "Crossing monkeybars";
-            //"Monkeybars"
-            final SimpleObject o = ctx.objects.populate().filter(14941).filterHasAction("Cross").nearest().next();
-            if (o != null && o.validateInteractable()) {
-                if (o.click("Cross", "Monkeybars")) {
-                    ctx.onCondition(() -> ctx.pathing.inMotion(), 1200);
-                }
-            }
-
-        } else if (seventhHouse.containsPoint(ctx.players.getLocal().getLocation()) && !inMotion) {
-            eMain.status = "Jumping on tree";
-            final SimpleObject o = ctx.objects.populate().filter(14944).filterHasAction("Jump-on").nearest().next();
-            if (o != null && o.validateInteractable()) {
-                if (o.click("Jump-on", "Tree")) {
-                    ctx.onCondition(() -> ctx.pathing.inMotion(), 1200);
-                }
-            }
-
-        } else if (eightHouse.containsPoint(ctx.players.getLocal().getLocation()) && !inMotion) {
-            eMain.status = "Jumping to tree";
-            final SimpleObject o = ctx.objects.populate().filter(14945).filterHasAction("Jump-to").nearest().next();
-            if (o != null && o.validateInteractable()) {
-                if (o.click("Jump-to", "Drying line")) {
-                    ctx.onCondition(() -> ctx.pathing.inMotion(), 1200);
-                }
-            }
-
-        } else if (lastLocation.containsPoint(ctx.players.getLocal().getLocation()) && !inMotion) {
+        if (eMain.lastHP > ctx.combat.health()) {
             SimpleWidget homeTeleport = ctx.widgets.getWidget(218, 6);//home teleport
-            eMain.status = "Teleporting to start";
+            eMain.status = "Course failed - starting over";
             if (ctx.game.tab(Game.Tab.MAGIC)) {
-                homeTeleport.click("Agility: Pollnivneach Rooftop", "Home Teleport");
+                homeTeleport.click(teleportName, "Home Teleport");
                 ctx.onCondition(() -> startLocation.containsPoint(ctx.players.getLocal().getLocation()), 3200);
+                eMain.lastHP = ctx.combat.health();
+            }
+        }
+
+        if (!eMain.firstTeleport) {
+            if (!eMain.teleporter.opened()) {
+                eMain.status = "Teleporting to agility course";
+                ctx.magic.castSpellOnce("Skilling Teleport");
+            } else {
+                eMain.status = "Browsing for chosen course";
+                eMain.teleporter.teleportStringPath("Skilling", teleportName);
+                ctx.onCondition(() -> startLocation.containsPoint(ctx.players.getLocal().getLocation()), 2400);
+                ctx.game.tab(Game.Tab.INVENTORY);
+                eMain.firstTeleport = true;
+                eMain.status = "Setup completed";
+            }
+
+        } else {
+            if (startLocation.containsPoint(ctx.players.getLocal().getLocation())) {
+                eMain.status = "Climbing basket";
+                eMain.lastHP = ctx.combat.health();
+                final SimpleObject o = ctx.objects.populate().filter(14935).filterHasAction("Climb-on").nearest().next();
+                if (o != null && o.validateInteractable() && !inMotion) {
+                    if (o.click("Climb-on", "Basket")) {
+                        ctx.onCondition(() -> inMotion, 1200);
+                    }
+                }
+            } else if (firstHouse.containsPoint(ctx.players.getLocal().getLocation())) {
+                eMain.status = "Jumping market stall";
+                final SimpleObject o = ctx.objects.populate().filter(14936).filterHasAction("Jump-on").nearest().next();
+                if (o != null && o.validateInteractable() && !inMotion) {
+                    if (o.click("Jump-on", "Market stall")) {
+                        ctx.onCondition(() -> inMotion, 1200);
+                    }
+                }
+            } else if (secondHouse.containsPoint(ctx.players.getLocal().getLocation())) {
+                final SimpleObject o = ctx.objects.populate().filter(14937).filterHasAction("Grab").next();
+                eMain.status = "Grabbing banner";
+                if (o != null && o.validateInteractable() && !inMotion) {
+                    if (o.click("Grab", "Banner")) {
+                        ctx.onCondition(() -> inMotion, 1200);
+                    }
+                }
+            } else if (thirdHouse.containsPoint(ctx.players.getLocal().getLocation())) {
+                eMain.status = "Leaping gap";
+                final SimpleObject o = ctx.objects.populate().filter(14938).filterHasAction("Leap").next();
+                if (o != null && o.validateInteractable() && !inMotion) {
+                    if (o.click("Leap", "Gap")) {
+                        ctx.onCondition(() -> inMotion, 1200);
+                    }
+                }
+
+            } else if (fourthHouse.containsPoint(ctx.players.getLocal().getLocation())) {
+                eMain.status = "Jumping to tree";
+                final SimpleObject o = ctx.objects.populate().filter(14939).filterHasAction("Jump-to").next();
+                if (o != null && o.validateInteractable() && !inMotion) {
+                    if (o.click("Jump-to", "Tree")) {
+                        ctx.onCondition(() -> inMotion, 1200);
+                    }
+                }
+
+            } else if (fifthHouse.containsPoint(ctx.players.getLocal().getLocation())) {
+                eMain.status = "Climbing wall";
+                final SimpleObject o = ctx.objects.populate().filter(14940).filterHasAction("Climb").nearest().next();
+                if (o != null && o.validateInteractable() && !inMotion) {
+                    if (o.click("Climb", "Rough wall")) {
+                        ctx.onCondition(() -> inMotion, 1200);
+                    }
+                }
+
+            } else if (sixthHouse.containsPoint(ctx.players.getLocal().getLocation())) {
+                eMain.status = "Crossing monkeybars";
+                //"Monkeybars"
+                final SimpleObject o = ctx.objects.populate().filter(14941).filterHasAction("Cross").nearest().next();
+                if (o != null && o.validateInteractable() && !inMotion) {
+                    if (o.click("Cross", "Monkeybars")) {
+                        ctx.onCondition(() -> inMotion, 1200);
+                    }
+                }
+
+            } else if (seventhHouse.containsPoint(ctx.players.getLocal().getLocation())) {
+                eMain.status = "Jumping on tree";
+                final SimpleObject o = ctx.objects.populate().filter(14944).filterHasAction("Jump-on").nearest().next();
+                if (o != null && o.validateInteractable() && !inMotion) {
+                    if (o.click("Jump-on", "Tree")) {
+                        ctx.onCondition(() -> inMotion, 1200);
+                    }
+                }
+
+            } else if (eightHouse.containsPoint(ctx.players.getLocal().getLocation())) {
+                eMain.status = "Jumping to tree";
+                final SimpleObject o = ctx.objects.populate().filter(14945).filterHasAction("Jump-to").nearest().next();
+                if (o != null && o.validateInteractable() && !inMotion) {
+                    if (o.click("Jump-to", "Drying line")) {
+                        ctx.onCondition(() -> inMotion, 1200);
+                    }
+                }
+
+            } else if (lastLocation.containsPoint(ctx.players.getLocal().getLocation())) {
+                SimpleWidget homeTeleport = ctx.widgets.getWidget(218, 6);//home teleport
+                eMain.status = "Teleporting to start";
+                if (ctx.game.tab(Game.Tab.MAGIC)) {
+                    homeTeleport.click(teleportName, "Home Teleport");
+                    ctx.onCondition(() -> startLocation.containsPoint(ctx.players.getLocal().getLocation()), 3200);
+                }
             }
         }
     }
 
     @Override
     public String status() {
-        return "Completed lap: " + eMain.count;
+        return "Laps completed: " + eMain.count;
     }
 }

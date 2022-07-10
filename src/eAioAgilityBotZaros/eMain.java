@@ -9,7 +9,11 @@ import simple.hooks.scripts.Category;
 import simple.hooks.scripts.ScriptManifest;
 import simple.hooks.scripts.task.TaskScript;
 import simple.hooks.simplebot.ChatMessage;
+import simple.hooks.simplebot.Game;
+import simple.hooks.simplebot.Magic;
 import simple.hooks.simplebot.Pathing;
+import simple.hooks.simplebot.teleporter.Teleporter;
+import simple.hooks.wrappers.SimpleWidget;
 
 import java.awt.*;
 import java.time.LocalTime;
@@ -20,11 +24,12 @@ import java.util.List;
 
 @ScriptManifest(author = "Esmaabi", category = Category.AGILITY, description =
         "<br>AIO agility training bot for rooftops courses<br><br>" +
-                "<b>Start chosen rooftops first obstacle <br>" +
+                "<b>Start anywhere and choose your course in Gui.</b><br>" +
+                "You <b>must</b> be using <b>normal spellbook</b>.<br><br>" +
                 "Supported courses:<br>" +
                 "Canifis, Seers, Pollnivneach, Rellekka",
         discord = "Esmaabi#5752",
-        name = "eAioAgilityBotZaros", servers = { "Zaros" }, version = "0.3")
+        name = "eAioAgilityBotZaros", servers = { "Zaros" }, version = "0.4")
 
 public class eMain extends TaskScript {
 
@@ -32,11 +37,16 @@ public class eMain extends TaskScript {
 
     public static eAioAgilityBotZaros.eMain.State courseName;
     public static String status = null;
+    public static Teleporter teleporter;
     private long startTime = 0L;
     private long startingSkillLevel;
     private long startingSkillExp;
     public static int startMarks, totalMarks;
     public static int count;
+    public static boolean firstTeleport;
+    public static long lastHP;
+    private long lastAnimation = -1;
+
     public enum State {
         CANIFIS,
         SEERS,
@@ -59,8 +69,11 @@ public class eMain extends TaskScript {
         startTime = System.currentTimeMillis(); //paint
         this.startingSkillLevel = this.ctx.skills.realLevel(SimpleSkills.Skills.AGILITY);//paint
         this.startingSkillExp = this.ctx.skills.experience(SimpleSkills.Skills.AGILITY);//paint
+        teleporter = new Teleporter(ctx);
+        lastHP = ctx.combat.health();
         count = 0;
         totalMarks = 0;
+        firstTeleport = false;
         status = "Setting up script";
 
         ctx.viewport.angle(0);
@@ -108,6 +121,39 @@ public class eMain extends TaskScript {
             pathing.running(true);
             ctx.sleep(200);
         }
+
+        if (!ctx.pathing.inMotion() && (System.currentTimeMillis() > (lastAnimation + 20000))) {
+            SimpleWidget compassWidget = ctx.widgets.getWidget(548, 23);
+            compassWidget.click(0);
+        } else if (ctx.pathing.inMotion()) {
+            lastAnimation = System.currentTimeMillis();
+        }
+
+        if (ctx.combat.health() <= 6) {
+            ctx.updateStatus("Low HP, sleeping to recover");
+            status = "Low HP, sleeping";
+            ctx.sleep(60000);
+        }
+
+        if (ctx.magic.spellBook() != Magic.SpellBook.MODERN && courseName != State.WAITING) {
+            ctx.game.tab(Game.Tab.MAGIC);
+            ctx.game.tab(Game.Tab.INVENTORY);
+            ctx.game.tab(Game.Tab.MAGIC);
+            ctx.game.tab(Game.Tab.INVENTORY);
+            ctx.game.tab(Game.Tab.MAGIC);
+            ctx.game.tab(Game.Tab.INVENTORY);
+            ctx.game.tab(Game.Tab.MAGIC);
+            status = "Normal spellbook required!";
+            ctx.game.tab(Game.Tab.INVENTORY);
+            ctx.updateStatus("Stopping script");
+            ctx.game.tab(Game.Tab.MAGIC);
+            ctx.updateStatus("and start script over!");
+            ctx.game.tab(Game.Tab.INVENTORY);
+            ctx.updateStatus("Please change spellbook to normal");
+            ctx.game.tab(Game.Tab.MAGIC);
+            ctx.sleep(10000);
+            ctx.stopScript();
+        }
     }
 
     @Override
@@ -117,7 +163,6 @@ public class eMain extends TaskScript {
         this.startingSkillExp = 0L;
         count = 0;
         totalMarks = 0;
-
     }
 
     @Override
@@ -139,11 +184,10 @@ public class eMain extends TaskScript {
         long SkillexpPhour = (int)((SkillExpGained * 3600000D) / runTime);
         totalMarks = ctx.inventory.populate().filter(11849).population(true) - startMarks;
         g.drawString("Runtime: " + formatTime(runTime), 15, 150);
-        g.drawString("Starting Level: " + this.startingSkillLevel + " (+" + SkillLevelsGained + ")" + " Current: " + currentSkillLevel, 15, 165);
-        //g.drawString("Current Level: " + currentSkillLevel, 15, 180);
-        g.drawString("MOG collected: " + totalMarks + " (" + ctx.paint.valuePerHour(totalMarks, startTime) + ")", 15, 180);
-        g.drawString("Exp gained: " + SkillExpGained + " (" + (SkillexpPhour / 1000L) + "k" + " xp/h)", 15, 195);
-        g.drawString("Laps count: " + count, 15, 210);
+        g.drawString("Current Level: " + currentSkillLevel + " (" + "+" + SkillLevelsGained + ")", 15, 165);
+        g.drawString("Exp gained: " + SkillExpGained + " (" + (SkillexpPhour / 1000L) + "k" + " xp/h)", 15, 180);
+        g.drawString("MOG collected: " + totalMarks + " (" + ctx.paint.valuePerHour(totalMarks, startTime) + " per/h)", 15, 195);
+        g.drawString("Laps count: " + count + " (" + ctx.paint.valuePerHour(count, startTime) + " laps/h)", 15, 210);
         g.drawString("Status: " + status, 15, 225);
     }
 

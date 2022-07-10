@@ -3,15 +3,18 @@ package eAioAgilityBotZaros.tasks;
 import eAioAgilityBotZaros.eMain;
 import net.runelite.api.coords.WorldPoint;
 import simple.hooks.scripts.task.Task;
+import simple.hooks.simplebot.Game;
 import simple.hooks.simplebot.Pathing;
 import simple.hooks.wrappers.SimpleGroundItem;
 import simple.hooks.wrappers.SimpleObject;
+import simple.hooks.wrappers.SimpleWidget;
 import simple.robot.api.ClientContext;
 import simple.robot.utils.WorldArea;
 
 public class eCanifisR extends Task {
 
-    private final WorldArea START = new WorldArea(new WorldPoint(3502, 3484, 0), new WorldPoint(3510, 3490, 0));
+    //Locations
+    private final WorldArea startLocation = new WorldArea(new WorldPoint(3502, 3484, 0), new WorldPoint(3510, 3490, 0));
     private static final WorldArea firstHouse = new WorldArea (new WorldPoint[] {
             new WorldPoint(3504, 3490, 2),
             new WorldPoint(3504, 3494, 2),
@@ -87,6 +90,7 @@ public class eCanifisR extends Task {
             new WorldPoint(3507, 3482, 2)
     });
 
+    private static String teleportName = "Agility: Canifis Rooftop";
 
     public eCanifisR(ClientContext ctx) {
         super(ctx);
@@ -113,85 +117,112 @@ public class eCanifisR extends Task {
             }
         }
 
-        if (START.containsPoint(ctx.players.getLocal().getLocation())) {
-            eMain.status = "Climbing tree";
-            final SimpleObject o = ctx.objects.populate().filter(14843).filterHasAction("Climb").nearest().next();
-            if (o != null && o.validateInteractable()) {
-                if (o.click("Climb", "Tall tree")) {
-                    ctx.onCondition(() -> ctx.pathing.inMotion(), 1200);
-                }
+        if (eMain.lastHP > ctx.combat.health()) {
+            SimpleWidget homeTeleport = ctx.widgets.getWidget(218, 6);//home teleport
+            eMain.status = "Course failed - starting over";
+            if (ctx.game.tab(Game.Tab.MAGIC)) {
+                homeTeleport.click(teleportName, "Home Teleport");
+                ctx.onCondition(() -> startLocation.containsPoint(ctx.players.getLocal().getLocation()), 3200);
+                eMain.lastHP = ctx.combat.health();
+            }
+        }
+
+        if (!eMain.firstTeleport) {
+            if (!eMain.teleporter.opened()) {
+                eMain.status = "Teleporting to agility course";
+                ctx.magic.castSpellOnce("Skilling Teleport");
+            } else {
+                eMain.status = "Browsing for chosen course";
+                eMain.teleporter.teleportStringPath("Skilling", teleportName);
+                ctx.onCondition(() -> startLocation.containsPoint(ctx.players.getLocal().getLocation()), 2400);
+                ctx.game.tab(Game.Tab.INVENTORY);
+                eMain.firstTeleport = true;
+                eMain.status = "Setup completed";
             }
 
-        } else if (firstHouse.containsPoint(ctx.players.getLocal().getLocation())) {
-            eMain.status = "Jumping gap";
-            final SimpleObject o = ctx.objects.populate().filter(14844).filterHasAction("Jump").nearest().next();
-            if (o != null && o.validateInteractable()) {
-                if (o.click("Jump", "Gap")) {
-                    ctx.onCondition(() -> ctx.pathing.inMotion(), 1200);
-                }
-            }
-
-        } else if (secondHouse.containsPoint(ctx.players.getLocal().getLocation())) {
-            final SimpleObject o = ctx.objects.populate().filter(14845).filterHasAction("Jump").next();
-            eMain.status = "Jumping gap";
-            if (o != null && o.validateInteractable()) {
-                if (o.click("Jump", "Gap")) {
-                    ctx.onCondition(() -> ctx.pathing.inMotion(), 1200);
-                }
-            }
-
-        } else if (thirdHouse.containsPoint(ctx.players.getLocal().getLocation())) {
-            eMain.status = "Jumping gap";
-            final SimpleObject o = ctx.objects.populate().filter(14848).filterHasAction("Jump").next();
-            if (o != null && o.validateInteractable()) {
-                if (o.click("Jump", "Gap")) {
-                    ctx.onCondition(() -> ctx.pathing.inMotion(), 1200);
-                }
-            }
-
-        } else if (fourthHouse.containsPoint(ctx.players.getLocal().getLocation())) {
-            eMain.status = "Jumping gap";
-            final SimpleObject o = ctx.objects.populate().filter(14846).filterHasAction("Jump").next();
-            if (o != null && o.validateInteractable()) {
-                if (o.click("Jump", "Gap")) {
-                    ctx.onCondition(() -> ctx.pathing.inMotion(), 1200);
-                }
-            }
-
-        } else if (fifthHouse.containsPoint(ctx.players.getLocal().getLocation())) {
-            eMain.status = "Pole vaulting";
-            final SimpleObject o = ctx.objects.populate().filter(14894).filterHasAction("Vault").nearest().next();
-            if (o != null && o.validateInteractable()) {
-                if (o.click("Vault", "Pole-vault")) {
-                    ctx.onCondition(() -> ctx.pathing.inMotion(), 1200);
-                }
-            }
-
-        } else if (sixthHouse.containsPoint(ctx.players.getLocal().getLocation())) {
-            eMain.status = "Jumping gap";
-            if (ctx.pathing.step(new WorldPoint(3502, 3476, 3))) {
-                final SimpleObject o = ctx.objects.populate().filter(14847).filterHasAction("Jump").nearest().next();
-                if (o != null && o.validateInteractable()) {
-                    if (o.click("Jump", "Gap")) {
-                        ctx.onCondition(() -> ctx.pathing.inMotion(), 1200);
+        } else {
+            if (startLocation.containsPoint(ctx.players.getLocal().getLocation())) {
+                eMain.status = "Climbing tree";
+                eMain.lastHP = ctx.combat.health();
+                final SimpleObject o = ctx.objects.populate().filter(14843).filterHasAction("Climb").nearest().next();
+                if (o != null && o.validateInteractable() && !inMotion) {
+                    if (o.click("Climb", "Tall tree")) {
+                        ctx.onCondition(() -> inMotion, 1200);
                     }
                 }
-            }
 
-        } else if (seventhHouse.containsPoint(ctx.players.getLocal().getLocation())) {
-            eMain.status = "Jumping gap";
-            final SimpleObject o = ctx.objects.populate().filter(14897).filterHasAction("Jump").nearest().next();
-            if (o != null && o.validateInteractable()) {
-                if (o.click("Jump", "Gap")) {
-                    ctx.onCondition(() -> ctx.pathing.inMotion(), 1200);
+            } else if (firstHouse.containsPoint(ctx.players.getLocal().getLocation())) {
+                eMain.status = "Jumping gap";
+                final SimpleObject o = ctx.objects.populate().filter(14844).filterHasAction("Jump").nearest().next();
+                if (o != null && o.validateInteractable() && !inMotion) {
+                    if (o.click("Jump", "Gap")) {
+                        ctx.onCondition(() -> inMotion, 1200);
+                    }
+                }
+
+            } else if (secondHouse.containsPoint(ctx.players.getLocal().getLocation())) {
+                final SimpleObject o = ctx.objects.populate().filter(14845).filterHasAction("Jump").next();
+                eMain.status = "Jumping gap";
+                if (o != null && o.validateInteractable() && !inMotion) {
+                    if (o.click("Jump", "Gap")) {
+                        ctx.onCondition(() -> inMotion, 1200);
+                    }
+                }
+
+            } else if (thirdHouse.containsPoint(ctx.players.getLocal().getLocation())) {
+                eMain.status = "Jumping gap";
+                final SimpleObject o = ctx.objects.populate().filter(14848).filterHasAction("Jump").next();
+                if (o != null && o.validateInteractable() && !inMotion) {
+                    if (o.click("Jump", "Gap")) {
+                        ctx.onCondition(() -> inMotion, 1200);
+                    }
+                }
+
+            } else if (fourthHouse.containsPoint(ctx.players.getLocal().getLocation())) {
+                eMain.status = "Jumping gap";
+                final SimpleObject o = ctx.objects.populate().filter(14846).filterHasAction("Jump").next();
+                if (o != null && o.validateInteractable() && !inMotion) {
+                    if (o.click("Jump", "Gap")) {
+                        ctx.onCondition(() -> inMotion, 1200);
+                    }
+                }
+
+            } else if (fifthHouse.containsPoint(ctx.players.getLocal().getLocation())) {
+                eMain.status = "Pole vaulting";
+                final SimpleObject o = ctx.objects.populate().filter(14894).filterHasAction("Vault").nearest().next();
+                if (o != null && o.validateInteractable() && !inMotion) {
+                    if (o.click("Vault", "Pole-vault")) {
+                        ctx.onCondition(() -> inMotion, 1200);
+                    }
+                }
+
+            } else if (sixthHouse.containsPoint(ctx.players.getLocal().getLocation())) {
+                eMain.status = "Jumping gap";
+                if (ctx.pathing.step(new WorldPoint(3502, 3476, 3))) {
+                    final SimpleObject o = ctx.objects.populate().filter(14847).filterHasAction("Jump").nearest().next();
+                    if (o != null && o.validateInteractable() && !inMotion) {
+                        if (o.click("Jump", "Gap")) {
+                            ctx.onCondition(() -> inMotion, 1200);
+                        }
+                    }
+                }
+
+            } else if (seventhHouse.containsPoint(ctx.players.getLocal().getLocation())) {
+                eMain.status = "Jumping gap";
+                final SimpleObject o = ctx.objects.populate().filter(14897).filterHasAction("Jump").nearest().next();
+                if (o != null && o.validateInteractable() && !inMotion) {
+                    if (o.click("Jump", "Gap")) {
+                        ctx.onCondition(() -> inMotion, 1200);
+                    }
                 }
             }
         }
     }
 
 
+
     @Override
     public String status() {
-        return "Completed lap: " + eMain.count;
+        return "Laps completed: " + eMain.count;
     }
 }

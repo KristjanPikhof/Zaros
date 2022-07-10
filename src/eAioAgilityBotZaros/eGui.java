@@ -19,7 +19,7 @@ public class eGui extends WindowAdapter {
                         + "AIO Rooftops agility courses training.\n"
                         + "\n"
                         + "1) It's recommended to zoom out to max.\n"
-                        + "2) Last teleport must be chosen agility course.\n"
+                        + "2) Start anywhere with normal spellbook\n"
                         + "\n"
                         + "For more information check out Esmaabi on SimpleBot!",
                 "eAioAgilityBot by Esmaabi",
