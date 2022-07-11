@@ -161,8 +161,8 @@ public class eCanifisR extends Task {
                 }
 
             } else if (secondHouse.containsPoint(ctx.players.getLocal().getLocation())) {
-                final SimpleObject o = ctx.objects.populate().filter(14845).filterHasAction("Jump").next();
                 eMain.status = "Jumping gap";
+                final SimpleObject o = ctx.objects.populate().filter(14845).filterHasAction("Jump").next();
                 if (o != null && o.validateInteractable() && !inMotion) {
                     if (o.click("Jump", "Gap")) {
                         ctx.onCondition(() -> inMotion, 1200);

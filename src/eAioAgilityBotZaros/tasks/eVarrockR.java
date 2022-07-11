@@ -11,90 +11,92 @@ import simple.hooks.wrappers.SimpleWidget;
 import simple.robot.api.ClientContext;
 import simple.robot.utils.WorldArea;
 
-public class ePollnivneachR extends Task {
+public class eVarrockR extends Task {
 
     //Locations
-    private final WorldArea startLocation = new WorldArea(new WorldPoint(3347, 2957, 0), new WorldPoint(3353, 2964, 0));
+    private static final WorldArea startLocation = new WorldArea (new WorldPoint[] {
+            new WorldPoint(3243, 3420, 0),
+            new WorldPoint(3243, 3408, 0),
+            new WorldPoint(3211, 3409, 0),
+            new WorldPoint(3212, 3422, 0),
+            new WorldPoint(3228, 3423, 0),
+            new WorldPoint(3229, 3420, 0)
+    });
     private static final WorldArea firstHouse = new WorldArea (new WorldPoint[] {
-            new WorldPoint(3345, 2969, 1),
-            new WorldPoint(3345, 2963, 1),
-            new WorldPoint(3349, 2962, 1),
-            new WorldPoint(3353, 2963, 1),
-            new WorldPoint(3352, 2970, 1),
-            new WorldPoint(3345, 2970, 1)
+            new WorldPoint(3221, 3409, 3),
+            new WorldPoint(3213, 3409, 3),
+            new WorldPoint(3213, 3421, 3),
+            new WorldPoint(3221, 3421, 3)
     });
 
     private static final WorldArea secondHouse = new WorldArea (new WorldPoint[] {
-            new WorldPoint(3356, 2977, 1),
-            new WorldPoint(3356, 2972, 1),
-            new WorldPoint(3351, 2972, 1),
-            new WorldPoint(3351, 2977, 1),
-            new WorldPoint(3356, 2977, 1)
+            new WorldPoint(3209, 3413, 3),
+            new WorldPoint(3209, 3416, 3),
+            new WorldPoint(3210, 3418, 3),
+            new WorldPoint(3208, 3421, 3),
+            new WorldPoint(3202, 3421, 3),
+            new WorldPoint(3199, 3416, 3),
+            new WorldPoint(3203, 3412, 3)
     });
 
     private static final WorldArea thirdHouse = new WorldArea (new WorldPoint[] {
-            new WorldPoint(3359, 2980, 1),
-            new WorldPoint(3363, 2980, 1),
-            new WorldPoint(3363, 2976, 1),
-            new WorldPoint(3359, 2976, 1)
+            new WorldPoint(3199, 3418, 1),
+            new WorldPoint(3199, 3415, 1),
+            new WorldPoint(3191, 3415, 1),
+            new WorldPoint(3191, 3418, 1)
     });
 
     private static final WorldArea fourthHouse = new WorldArea (new WorldPoint[] {
-            new WorldPoint(3365, 2977, 1),
-            new WorldPoint(3365, 2973, 1),
-            new WorldPoint(3371, 2973, 1),
-            new WorldPoint(3371, 2977, 1)
+            new WorldPoint(3199, 3407, 3),
+            new WorldPoint(3190, 3407, 3),
+            new WorldPoint(3190, 3401, 3),
+            new WorldPoint(3199, 3401, 3)
     });
 
     private static final WorldArea fifthHouse = new WorldArea (new WorldPoint[] {
-            new WorldPoint(3364, 2984, 1),
-            new WorldPoint(3364, 2987, 1),
-            new WorldPoint(3371, 2987, 1),
-            new WorldPoint(3371, 2984, 1),
-            new WorldPoint(3370, 2981, 1),
-            new WorldPoint(3365, 2981, 1),
-            new WorldPoint(3365, 2983, 1),
-            new WorldPoint(3366, 2983, 1),
-            new WorldPoint(3366, 2984, 1)
+            new WorldPoint(3190, 3387, 3),
+            new WorldPoint(3190, 3381, 3),
+            new WorldPoint(3181, 3381, 3),
+            new WorldPoint(3181, 3400, 3),
+            new WorldPoint(3201, 3400, 3),
+            new WorldPoint(3201, 3405, 3),
+            new WorldPoint(3210, 3405, 3),
+            new WorldPoint(3210, 3395, 3),
+            new WorldPoint(3196, 3387, 3)
     });
 
     private static final WorldArea sixthHouse = new WorldArea (new WorldPoint[] {
-            new WorldPoint(3366, 2987, 2),
-            new WorldPoint(3354, 2987, 2),
-            new WorldPoint(3354, 2979, 2),
-            new WorldPoint(3366, 2979, 2)
+            new WorldPoint(3217, 3404, 3),
+            new WorldPoint(3217, 3392, 3),
+            new WorldPoint(3234, 3392, 3),
+            new WorldPoint(3234, 3404, 3),
+            new WorldPoint(3220, 3406, 3)
     });
 
     private static final WorldArea seventhHouse = new WorldArea (new WorldPoint[] {
-            new WorldPoint(3355, 2996, 2),
-            new WorldPoint(3356, 2990, 2),
-            new WorldPoint(3371, 2989, 2),
-            new WorldPoint(3371, 2996, 2)
+            new WorldPoint(3241, 3410, 3),
+            new WorldPoint(3235, 3410, 3),
+            new WorldPoint(3235, 3402, 3),
+            new WorldPoint(3241, 3402, 3)
     });
 
     private static final WorldArea eightHouse = new WorldArea (new WorldPoint[] {
-            new WorldPoint(3355, 3006, 2),
-            new WorldPoint(3355, 2999, 2),
-            new WorldPoint(3363, 2999, 2),
-            new WorldPoint(3363, 3006, 2)
+            new WorldPoint(3241, 3410, 3),
+            new WorldPoint(3235, 3410, 3),
+            new WorldPoint(3235, 3418, 3),
+            new WorldPoint(3241, 3418, 3)
     });
 
-    private static final WorldArea lastLocation = new WorldArea (new WorldPoint[] {
-            new WorldPoint(3361, 3000, 0),
-            new WorldPoint(3361, 2997, 0),
-            new WorldPoint(3367, 2997, 0),
-            new WorldPoint(3367, 3000, 0)
-    });
 
-    private static String teleportName = "Agility: Pollnivneach Rooftop";
+    private static String teleportName = "Agility: Varrock Rooftop";
 
-    public ePollnivneachR(ClientContext ctx) {
+    public eVarrockR(ClientContext ctx) {
         super(ctx);
     }
 
     @Override
     public boolean condition() {
-        return eMain.courseName == eMain.State.POLLNIVNEACH;
+        return eMain.courseName == eMain.State.VARROCK;
     }
 
     @Override
@@ -139,90 +141,83 @@ public class ePollnivneachR extends Task {
 
         } else {
             if (startLocation.containsPoint(ctx.players.getLocal().getLocation())) {
-                eMain.status = "Climbing basket";
+                eMain.status = "Climbing wall";
                 eMain.lastHP = ctx.combat.health();
-                final SimpleObject o = ctx.objects.populate().filter(14935).filterHasAction("Climb-on").nearest().next();
+                ctx.viewport.angle(90);
+                final SimpleObject o = ctx.objects.populate().filter(14412).filterHasAction("Climb").nearest().next();
                 if (o != null && o.validateInteractable() && !inMotion) {
-                    if (o.click("Climb-on", "Basket")) {
+                    if (o.click("Climb", "Rough wall")) {
                         ctx.onCondition(() -> inMotion, 1200);
                     }
                 }
             } else if (firstHouse.containsPoint(ctx.players.getLocal().getLocation())) {
-                eMain.status = "Jumping market stall";
-                final SimpleObject o = ctx.objects.populate().filter(14936).filterHasAction("Jump-on").nearest().next();
+                eMain.status = "Crossing clothes line";
+                final SimpleObject o = ctx.objects.populate().filter(14413).filterHasAction("Cross").nearest().next();
                 if (o != null && o.validateInteractable() && !inMotion) {
-                    if (o.click("Jump-on", "Market stall")) {
+                    if (o.click("Cross", "Clothes line")) {
                         ctx.onCondition(() -> inMotion, 1200);
                     }
                 }
             } else if (secondHouse.containsPoint(ctx.players.getLocal().getLocation())) {
-                eMain.status = "Grabbing banner";
-                final SimpleObject o = ctx.objects.populate().filter(14937).filterHasAction("Grab").next();
+                eMain.status = "Leaping gap";
+                final SimpleObject o = ctx.objects.populate().filter(14414).filterHasAction("Leap").next();
                 if (o != null && o.validateInteractable() && !inMotion) {
-                    if (o.click("Grab", "Banner")) {
+                    if (o.click("Leap", "Gap")) {
                         ctx.onCondition(() -> inMotion, 1200);
                     }
                 }
             } else if (thirdHouse.containsPoint(ctx.players.getLocal().getLocation())) {
+                eMain.status = "Balancing wall";
+                final SimpleObject o = ctx.objects.populate().filter(14832).filterHasAction("Balance").next();
+                if (o != null && o.validateInteractable() && !inMotion) {
+                    if (o.click("Balance", "Wall")) {
+                        ctx.onCondition(() -> inMotion, 1200);
+                    }
+                }
+
+            } else if (fourthHouse.containsPoint(ctx.players.getLocal().getLocation())) {
                 eMain.status = "Leaping gap";
-                final SimpleObject o = ctx.objects.populate().filter(14938).filterHasAction("Leap").next();
+                final SimpleObject o = ctx.objects.populate().filter(14833).filterHasAction("Leap").next();
                 if (o != null && o.validateInteractable() && !inMotion) {
                     if (o.click("Leap", "Gap")) {
                         ctx.onCondition(() -> inMotion, 1200);
                     }
                 }
 
-            } else if (fourthHouse.containsPoint(ctx.players.getLocal().getLocation())) {
-                eMain.status = "Jumping to tree";
-                final SimpleObject o = ctx.objects.populate().filter(14939).filterHasAction("Jump-to").next();
-                if (o != null && o.validateInteractable() && !inMotion) {
-                    if (o.click("Jump-to", "Tree")) {
-                        ctx.onCondition(() -> inMotion, 1200);
-                    }
-                }
-
             } else if (fifthHouse.containsPoint(ctx.players.getLocal().getLocation())) {
-                eMain.status = "Climbing wall";
-                final SimpleObject o = ctx.objects.populate().filter(14940).filterHasAction("Climb").nearest().next();
-                if (o != null && o.validateInteractable() && !inMotion) {
-                    if (o.click("Climb", "Rough wall")) {
+                eMain.status = "Leaping gap";
+                final SimpleObject o = ctx.objects.populate().filter(14834).filterHasAction("Leap").nearest().next();
+                if (o != null && o.validateInteractable()) {
+                    if (o.click("Leap", "Gap")) {
                         ctx.onCondition(() -> inMotion, 1200);
                     }
                 }
 
             } else if (sixthHouse.containsPoint(ctx.players.getLocal().getLocation())) {
-                eMain.status = "Crossing monkeybars";
-                final SimpleObject o = ctx.objects.populate().filter(14941).filterHasAction("Cross").nearest().next();
-                if (o != null && o.validateInteractable() && !inMotion) {
-                    if (o.click("Cross", "Monkeybars")) {
+                eMain.status = "Leaping gap";
+                final SimpleObject o = ctx.objects.populate().filter(14835).filterHasAction("Leap").nearest().next();
+                if (o != null && o.validateInteractable()) {
+                    if (o.click("Leap", "Gap")) {
                         ctx.onCondition(() -> inMotion, 1200);
                     }
                 }
 
             } else if (seventhHouse.containsPoint(ctx.players.getLocal().getLocation())) {
-                eMain.status = "Jumping on tree";
-                final SimpleObject o = ctx.objects.populate().filter(14944).filterHasAction("Jump-on").nearest().next();
+                eMain.status = "Crossing ledge";
+                final SimpleObject o = ctx.objects.populate().filter(14836).filterHasAction("Hurdle").nearest().next();
                 if (o != null && o.validateInteractable() && !inMotion) {
-                    if (o.click("Jump-on", "Tree")) {
+                    if (o.click("Hurdle", "Ledge")) {
                         ctx.onCondition(() -> inMotion, 1200);
                     }
                 }
 
             } else if (eightHouse.containsPoint(ctx.players.getLocal().getLocation())) {
-                eMain.status = "Jumping to tree";
-                final SimpleObject o = ctx.objects.populate().filter(14945).filterHasAction("Jump-to").nearest().next();
+                eMain.status = "Jumping off edge";
+                final SimpleObject o = ctx.objects.populate().filter(14841).filterHasAction("Jump-off").nearest().next();
                 if (o != null && o.validateInteractable() && !inMotion) {
-                    if (o.click("Jump-to", "Drying line")) {
+                    if (o.click("Jump-off", "Edge")) {
                         ctx.onCondition(() -> inMotion, 1200);
                     }
-                }
-
-            } else if (lastLocation.containsPoint(ctx.players.getLocal().getLocation())) {
-                SimpleWidget homeTeleport = ctx.widgets.getWidget(218, 6);//home teleport
-                eMain.status = "Teleporting to start";
-                if (ctx.game.tab(Game.Tab.MAGIC)) {
-                    homeTeleport.click(teleportName, "Home Teleport");
-                    ctx.onCondition(() -> startLocation.containsPoint(ctx.players.getLocal().getLocation()), 3200);
                 }
             }
         }

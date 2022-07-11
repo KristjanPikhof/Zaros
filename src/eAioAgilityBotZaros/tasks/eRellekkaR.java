@@ -141,8 +141,8 @@ public class eRellekkaR extends Task {
                 }
 
             } else if (secondHouse.containsPoint(ctx.players.getLocal().getLocation()) && !inMotion) {
-                final SimpleObject o = ctx.objects.populate().filter(14987).filterHasAction("Cross").next();
                 eMain.status = "Crossing tightrope";
+                final SimpleObject o = ctx.objects.populate().filter(14987).filterHasAction("Cross").next();
                 if (o != null && o.validateInteractable() && !inMotion) {
                     if (o.click("Cross", "Tightrope")) {
                         ctx.onCondition(() -> inMotion, 1200);

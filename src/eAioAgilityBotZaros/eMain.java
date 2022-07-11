@@ -1,9 +1,6 @@
 package eAioAgilityBotZaros;
 
-import eAioAgilityBotZaros.tasks.eCanifisR;
-import eAioAgilityBotZaros.tasks.eRellekkaR;
-import eAioAgilityBotZaros.tasks.eSeersR;
-import eAioAgilityBotZaros.tasks.ePollnivneachR;
+import eAioAgilityBotZaros.tasks.*;
 import simple.hooks.filters.SimpleSkills;
 import simple.hooks.scripts.Category;
 import simple.hooks.scripts.ScriptManifest;
@@ -24,12 +21,12 @@ import java.util.List;
 
 @ScriptManifest(author = "Esmaabi", category = Category.AGILITY, description =
         "<br>AIO agility training bot for rooftops courses<br><br>" +
-                "<b>Start anywhere and choose your course in Gui.</b><br>" +
+                "<b>Start anywhere</b> and <b>select preferred</b> course in GUI.<br><br>" +
                 "You <b>must</b> be using <b>normal spellbook</b>.<br><br>" +
                 "Supported courses:<br>" +
-                "Canifis, Seers, Pollnivneach, Rellekka",
+                "Al-Kharid, Varrock, Canifis, Seers,<br> Pollnivneach, Rellekka, Ardougne",
         discord = "Esmaabi#5752",
-        name = "eAioAgilityBotZaros", servers = { "Zaros" }, version = "0.4")
+        name = "eAioAgilityBotZaros", servers = { "Zaros" }, version = "0.7")
 
 public class eMain extends TaskScript {
 
@@ -45,23 +42,29 @@ public class eMain extends TaskScript {
     public static int count;
     public static boolean firstTeleport;
     public static long lastHP;
-    private long lastAnimation = -1;
+    private long lastAnimation;
 
     public enum State {
+        ALKHARID,
+        VARROCK,
         CANIFIS,
         SEERS,
         POLLNIVNEACH,
         RELLEKKA,
+        ARDOUGNE,
         WAITING,
     }
 
     @Override
     public void onExecute() {
         tasks.addAll(Arrays.asList(
+                new eAlKharidR(ctx),
+                new eVarrockR(ctx),
                 new eCanifisR(ctx),
                 new eSeersR(ctx),
                 new ePollnivneachR(ctx),
-                new eRellekkaR(ctx)
+                new eRellekkaR(ctx),
+                new eArdougneR(ctx)
         ));// Adds our tasks to our {task} list for execution
 
         System.out.println("Started eAioAgilityBot!");
@@ -78,18 +81,25 @@ public class eMain extends TaskScript {
 
         ctx.viewport.angle(0);
         ctx.viewport.pitch(true);
+        lastAnimation = System.currentTimeMillis() + 20000;
 
         eAioAgilityBotZaros.eGui.eGuiDialogue();
-        if (eGui.courseName == "Canifis") {
+        if (eGui.courseName == "Al-Kharid Rooftop") {
+            courseName = eAioAgilityBotZaros.eMain.State.ALKHARID;
+        } else if (eGui.courseName == "Varrock Rooftop") {
+            courseName = eAioAgilityBotZaros.eMain.State.VARROCK;
+        } else if (eGui.courseName == "Canifis Rooftop") {
             courseName = eAioAgilityBotZaros.eMain.State.CANIFIS;
-        } else if (eGui.courseName == "Seers") {
-            courseName = State.SEERS;
-        } else if (eGui.courseName == "Pollnivneach") {
+        } else if (eGui.courseName == "Seers Rooftop") {
+            courseName = eAioAgilityBotZaros.eMain.State.SEERS;
+        } else if (eGui.courseName == "Pollnivneach Rooftop") {
             courseName = eAioAgilityBotZaros.eMain.State.POLLNIVNEACH;
-        } else if (eGui.courseName == "Rellekka") {
+        } else if (eGui.courseName == "Rellekka Rooftop") {
             courseName = eAioAgilityBotZaros.eMain.State.RELLEKKA;
+        } else if (eGui.courseName == "Ardougne Rooftop") {
+            courseName = eAioAgilityBotZaros.eMain.State.ARDOUGNE;
         } else {
-            courseName = State.WAITING;
+            courseName = eAioAgilityBotZaros.eMain.State.WAITING;
         }
     }
 
