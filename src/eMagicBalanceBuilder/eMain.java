@@ -2,12 +2,10 @@ package eMagicBalanceBuilder;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.event.KeyEvent;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 import net.runelite.api.coords.WorldPoint;
-import simple.hooks.filters.SimpleShop;
 import simple.hooks.filters.SimpleSkills;
 import simple.hooks.scripts.Category;
 import simple.hooks.scripts.ScriptManifest;
@@ -26,7 +24,7 @@ import simple.robot.utils.WorldArea;
         + "1. You must have enough Air, Fire, Earth and Water runes;<br>"
         + "2. You must have saw and hammer in invenotry;<br>"
         + "3. You must have a Games Room in POH<br>", discord = "Esmaabi#5752",
-        name = "eMagicBalanceBuilder", servers = { "Zaros" }, version = "1")
+        name = "eMagicBalanceBuilder", servers = { "Zaros" }, version = "1.1")
 
 public class eMain extends Script{
 
@@ -61,37 +59,12 @@ public class eMain extends Script{
     @Override
     public void onProcess() {
 
-        //if (!EDGE_SHOP.containsPoint(ctx.players.getLocal().getLocation())) {
             SimpleObject buildSpace = ctx.objects.populate().filter("Elemental balance").filterHasAction("Remove").next();
-            //SimpleObject removeBalancer = ctx.objects.populate().filter("Elemental balance space").filterHasAction("Build").next();
             if (buildSpace != null) {
                 removeMagicBalancer();
             } else {
                 buildMagicBalancer();
             }
-/*        } else {
-            SimpleWidget shopWidget = ctx.widgets.getWidget(1029, 17);
-            if (shopWidget != null) {
-                if (ctx.inventory.populate().filter(995) != null) {
-                    if (ctx.inventory.populate().filter(554).population() < 500000) {
-                        SimpleWidget fireRune = ctx.widgets.getWidget(1029, 17).getDynamicChildren()[0];
-                        if (fireRune != null && fireRune.validateInteractable()) {
-                            fireRune.click("Buy X", "Fire rune");
-                            if (ctx.dialogue.dialogueOpen()) {
-                                ctx.keyboard.clickKey(KeyEvent.VK_1);
-                                ctx.sleep(600);
-                                ctx.keyboard.clickKey(KeyEvent.VK_2);
-                                ctx.sleep(600);
-                                ctx.keyboard.clickKey(KeyEvent.VK_K);
-                                ctx.sleep(600);
-                                ctx.keyboard.clickKey(KeyEvent.VK_ENTER);
-                            }
-
-                        }
-                    }
-                }
-            }
-        }*/
         if (currentExp != this.ctx.skills.experience(SimpleSkills.Skills.CONSTRUCTION)) {
             count++;
             currentExp = this.ctx.skills.experience(SimpleSkills.Skills.CONSTRUCTION);
@@ -193,7 +166,7 @@ public class eMain extends Script{
         s %= 60L;
         m %= 60L;
         h %= 24L;
-        return String.format("%02d:%02d:%02d", new Object[] { Long.valueOf(h), Long.valueOf(m), Long.valueOf(s) });
+        return String.format("%02d:%02d:%02d", h, m, s);
     }
 
 }
