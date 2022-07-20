@@ -27,7 +27,7 @@ import java.time.format.DateTimeFormatter;
         + "Supported home in <b>Edge</b> or in <b>Donor Zone</b>.<br>"
         + "Healing as low as 6hp!",
         discord = "Esmaabi#5752",
-        name = "eMasterFarmerTZaros", servers = { "Zaros" }, version = "0.5")
+        name = "eMasterFarmerTZaros", servers = { "Zaros" }, version = "0.6")
 
 public class eMain extends Script{
     //coordinates
@@ -154,26 +154,26 @@ public class eMain extends Script{
                     ctx.onCondition(() -> ctx.combat.health() > 6, 5000);
                 }
             } else if (ctx.combat.health() > 6 && EDGE.containsPoint(ctx.players.getLocal().getLocation()) || DONOR.containsPoint(ctx.players.getLocal().getLocation())) {
-                    status = "Teleporting to Draynor";
-                    if (ctx.game.tab(Game.Tab.MAGIC)) {
-                        stunned = false;
-                        SimpleWidget homeTeleport = ctx.widgets.getWidget(218, 6);
-                        homeTeleport.click("Draynor", "Home Teleport");
-                        ctx.onCondition(() -> DRAYNOR.containsPoint(ctx.players.getLocal().getLocation()), 2400);
-                        ctx.game.tab(Game.Tab.INVENTORY);
-                    }
+                status = "Teleporting to Draynor";
+                ctx.game.tab(Game.Tab.MAGIC);
+                stunned = false;
+                SimpleWidget homeTeleport = ctx.widgets.getWidget(218, 6);
+                if (homeTeleport.click("Draynor", "Home Teleport")) {
+                    ctx.onCondition(() -> DRAYNOR.containsPoint(ctx.players.getLocal().getLocation()), 2400);
+                    ctx.game.tab(Game.Tab.INVENTORY);
+                }
             } else if (ctx.combat.health() <= 6 && DRAYNOR.containsPoint(ctx.players.getLocal().getLocation())) {
                 ctx.magic.castHomeTeleport();
                 ctx.onCondition(() -> (EDGE.containsPoint(ctx.players.getLocal().getLocation()) || DONOR.containsPoint(ctx.players.getLocal().getLocation())), 5000);
             } else if (!DRAYNOR.containsPoint(ctx.players.getLocal().getLocation()) || !EDGE.containsPoint(ctx.players.getLocal().getLocation()) || !DONOR.containsPoint(ctx.players.getLocal().getLocation())) {
                 status = "Lost, teleporting back";
-                if (ctx.game.tab(Game.Tab.MAGIC)) {
-                    stunned = false;
-                    SimpleWidget homeTeleport = ctx.widgets.getWidget(218, 6);
-                    homeTeleport.click("Draynor", "Home Teleport");
-                    ctx.onCondition(() -> DRAYNOR.containsPoint(ctx.players.getLocal().getLocation()), 2400);
-                    ctx.game.tab(Game.Tab.INVENTORY);
-                }
+                ctx.game.tab(Game.Tab.MAGIC);
+                stunned = false;
+                SimpleWidget homeTeleport = ctx.widgets.getWidget(218, 6);
+                    if (homeTeleport.click("Draynor", "Home Teleport")) {
+                        ctx.onCondition(() -> DRAYNOR.containsPoint(ctx.players.getLocal().getLocation()), 2400);
+                        ctx.game.tab(Game.Tab.INVENTORY);
+                    }
             }
         }
 
