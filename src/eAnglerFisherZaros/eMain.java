@@ -28,7 +28,7 @@ import simple.robot.utils.WorldArea;
                 "<li>Supported special attack with dragon harpoon equipped;</li>" +
                 "<li>Included <b>anti-ban</b> features!</li></ul>",
         discord = "Esmaabi#5752",
-        name = "eAnglerFisherZaros", servers = { "Zaros" }, version = "2.5")
+        name = "eAnglerFisherZaros", servers = { "Zaros" }, version = "2.6")
 
 public class eMain extends Script{
     //coordinates
@@ -252,15 +252,18 @@ public class eMain extends Script{
     }
 
     public void teleportingToBank() {
-            status = "Sleeping (anti-ban)";
-            ctx.sleep(randomSleeping(1200, 24000));
-            status = "Teleporting to bank";
-            SimpleWidget homeTeleport = ctx.widgets.getWidget(218, 6);//home teleport
-            ctx.game.tab(Game.Tab.MAGIC);
-            homeTeleport.click("Fishing: Anglerfish", "Home Teleport");
-            ctx.onCondition(() -> ANGLER_BANK.containsPoint(ctx.players.getLocal().getLocation()), 2400);
-            ctx.game.tab(Game.Tab.INVENTORY);
-            fishingState = false;
+        status = "Sleeping (anti-ban)";
+        ctx.sleep(randomSleeping(1200, 24000));
+        status = "Teleporting to bank";
+        if (!ANGLER_BANK.containsPoint(ctx.players.getLocal().getLocation())) {
+                ctx.game.tab(Game.Tab.MAGIC);
+                SimpleWidget homeTeleport = ctx.widgets.getWidget(218, 6);//home teleport
+                if (homeTeleport.click("Fishing: Anglerfish", "Home Teleport")) {
+                    ctx.onCondition(() -> ANGLER_BANK.containsPoint(ctx.players.getLocal().getLocation()), 2400);
+                    ctx.game.tab(Game.Tab.INVENTORY);
+                    fishingState = false;
+                }
+        }
     }
 
     public void teleportingToBankInstant() {
