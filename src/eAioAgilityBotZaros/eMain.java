@@ -1,6 +1,7 @@
 package eAioAgilityBotZaros;
 
 import eAioAgilityBotZaros.tasks.*;
+import simple.hooks.filters.SimpleEquipment;
 import simple.hooks.filters.SimpleSkills;
 import simple.hooks.scripts.Category;
 import simple.hooks.scripts.ScriptManifest;
@@ -10,6 +11,7 @@ import simple.hooks.simplebot.Game;
 import simple.hooks.simplebot.Magic;
 import simple.hooks.simplebot.Pathing;
 import simple.hooks.simplebot.teleporter.Teleporter;
+import simple.hooks.wrappers.SimpleItem;
 import simple.hooks.wrappers.SimpleWidget;
 
 import java.awt.*;
@@ -100,6 +102,16 @@ public class eMain extends TaskScript {
             courseName = eAioAgilityBotZaros.eMain.State.ARDOUGNE;
         } else {
             courseName = eAioAgilityBotZaros.eMain.State.WAITING;
+        }
+
+        //counting marks of grace
+        SimpleItem ringOfWealth = ctx.equipment.getEquippedItem(SimpleEquipment.EquipmentSlot.RING);
+        if (ringOfWealth != null && ringOfWealth.getName().contains("wealth")) {
+            totalMarks = 0;
+            ctx.updateStatus("Ring of wealth equipped");
+        } else {
+            totalMarks = ctx.inventory.populate().filter(11849).population(true) - startMarks;
+            ctx.updateStatus("Ring of wealth not equipped");
         }
     }
 
@@ -192,7 +204,6 @@ public class eMain extends TaskScript {
         long SkillLevelsGained = currentSkillLevel - this.startingSkillLevel;
         long SkillExpGained = currentSkillExp - this.startingSkillExp;
         long SkillexpPhour = (int)((SkillExpGained * 3600000D) / runTime);
-        totalMarks = ctx.inventory.populate().filter(11849).population(true) - startMarks;
         g.drawString("Runtime: " + formatTime(runTime), 15, 150);
         g.drawString("Current Level: " + currentSkillLevel + " (" + "+" + SkillLevelsGained + ")", 15, 165);
         g.drawString("Exp gained: " + SkillExpGained + " (" + (SkillexpPhour / 1000L) + "k" + " xp/h)", 15, 180);
@@ -211,6 +222,8 @@ public class eMain extends TaskScript {
                 ctx.stopScript();
             } else if (message.contains("lap count is")) {
                 count++;
+            } else if (message.contains("x marks of grace to your bank")) {
+                totalMarks +=2;
             }
         }
     }

@@ -49,7 +49,6 @@ public void paint(Graphics g) {
 @Override
 public void onChatMessage(ChatMessage arg0) {
 	// TODO Auto-generated method stub
-
 }
 
 @Override

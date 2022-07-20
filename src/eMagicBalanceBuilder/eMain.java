@@ -5,7 +5,6 @@ import java.awt.Graphics;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
-import net.runelite.api.coords.WorldPoint;
 import simple.hooks.filters.SimpleSkills;
 import simple.hooks.scripts.Category;
 import simple.hooks.scripts.ScriptManifest;
@@ -14,7 +13,6 @@ import simple.hooks.simplebot.ChatMessage;
 import simple.hooks.wrappers.SimpleObject;
 import simple.hooks.wrappers.SimpleWidget;
 import simple.robot.script.Script;
-import simple.robot.utils.WorldArea;
 
 
 @ScriptManifest(author = "Esmaabi", category = Category.CONSTRUCTION, description = "<br>"
@@ -37,7 +35,6 @@ public class eMain extends Script{
     private int count;
     static String status = null;
 
-    private final WorldArea EDGE_SHOP = new WorldArea(new WorldPoint(3071, 3520, 0), new WorldPoint(3113, 3503, 0));
 
 
     @Override
