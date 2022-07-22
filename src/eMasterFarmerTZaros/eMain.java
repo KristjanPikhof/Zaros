@@ -132,6 +132,7 @@ public class eMain extends Script{
                 } else {
                     status = "Banking";
                     if (bank != null && bank.validateInteractable() && !ctx.bank.bankOpen()) {
+                        ctx.pathing.step(3091, 3248);
                         bank.click("Bank", "Bank booth");
                         ctx.onCondition(() -> ctx.bank.bankOpen(), 5000);
                     } else if (ctx.bank.bankOpen()) {
