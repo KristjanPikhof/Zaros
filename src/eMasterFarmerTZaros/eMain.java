@@ -27,13 +27,13 @@ import java.time.format.DateTimeFormatter;
         + "Supported home in <b>Edge</b> or in <b>Donor Zone</b>.<br>"
         + "Healing as low as 6hp!",
         discord = "Esmaabi#5752",
-        name = "eMasterFarmerTZaros", servers = { "Zaros" }, version = "0.6")
+        name = "eMasterFarmerTZaros", servers = { "Zaros" }, version = "0.7")
 
 public class eMain extends Script{
     //coordinates
     private final WorldArea EDGE = new WorldArea(new WorldPoint(3072, 3507, 0), new WorldPoint(3111, 3464, 0));
     private final WorldArea DONOR = new WorldArea(new WorldPoint(1386, 8896, 0), new WorldPoint(1367, 9008, 0));
-    private static final WorldArea DRAYNOR = new WorldArea (new WorldPoint[] {
+    private static final WorldArea DRAYNOR = new WorldArea (
             new WorldPoint(3069, 3267, 0),
             new WorldPoint(3068, 3261, 0),
             new WorldPoint(3068, 3256, 0),
@@ -48,8 +48,23 @@ public class eMain extends Script{
             new WorldPoint(3087, 3251, 0),
             new WorldPoint(3087, 3256, 0),
             new WorldPoint(3083, 3256, 0),
-            new WorldPoint(3083, 3267, 0)
-    });
+            new WorldPoint(3083, 3267, 0));
+
+    private static final WorldArea draynorBank = new WorldArea (
+            new WorldPoint(3099, 3250, 0),
+            new WorldPoint(3099, 3238, 0),
+            new WorldPoint(3085, 3238, 0),
+            new WorldPoint(3085, 3245, 0),
+            new WorldPoint(3080, 3245, 0),
+            new WorldPoint(3079, 3247, 0),
+            new WorldPoint(3079, 3249, 0),
+            new WorldPoint(3079, 3252, 0),
+            new WorldPoint(3081, 3254, 0),
+            new WorldPoint(3086, 3253, 0),
+            new WorldPoint(3086, 3251, 0),
+            new WorldPoint(3099, 3251, 0));
+
+
 
     //vars
     private Teleporter teleporter;
@@ -69,6 +84,7 @@ public class eMain extends Script{
     @Override
     public void onExecute() {
         System.out.println("Started eMasterFarmerTZaros!");
+        status = "Setting up script";
         this.teleporter = new Teleporter(ctx);
         this.startTime = System.currentTimeMillis();
         this.startingSkillLevel = this.ctx.skills.realLevel(SimpleSkills.Skills.THIEVING);
@@ -131,19 +147,27 @@ public class eMain extends Script{
 
                 } else {
                     status = "Banking";
-                    if (bank != null && bank.validateInteractable() && !ctx.bank.bankOpen()) {
-                        ctx.pathing.step(3091, 3248);
-                        bank.click("Bank", "Bank booth");
-                        ctx.onCondition(() -> ctx.bank.bankOpen(), 5000);
-                    } else if (ctx.bank.bankOpen()) {
-                        ctx.bank.depositInventory();
-                        ctx.sleep(randomSleeping(200, 2200));
-                        ctx.bank.closeBank();
-                    }
 
-                    if (bank == null) {
-                        status = "Taking steps to bank";
-                        ctx.pathing.step(3091, 3248);
+                    if (draynorBank.containsPoint(ctx.players.getLocal().getLocation())) {
+
+                        if (bank != null && bank.validateInteractable() && !ctx.bank.bankOpen()) {
+                            bank.click("Bank", "Bank booth");
+                            ctx.onCondition(() -> ctx.bank.bankOpen(), 5000);
+
+                        } else if (ctx.bank.bankOpen()) {
+                            ctx.bank.depositInventory();
+                            ctx.sleep(randomSleeping(200, 2200));
+                            ctx.bank.closeBank();
+                        }
+
+                        if (bank == null) {
+                            status = "Taking steps to bank";
+                            ctx.pathing.step(3088, 3248);
+                        }
+
+                    } else {
+                        ctx.pathing.step(3088, 3248);
+                        ctx.onCondition(() -> draynorBank.containsPoint(ctx.players.getLocal().getLocation()), 1200);
                     }
                 }
             } else if (ctx.combat.health() <= 6 && EDGE.containsPoint(ctx.players.getLocal().getLocation()) || DONOR.containsPoint(ctx.players.getLocal().getLocation())) {
@@ -216,6 +240,7 @@ public class eMain extends Script{
 
     @Override
     public void onTerminate() {
+        status = "Shutting down";
         this.startingSkillLevel = 0L;
         this.startingSkillExp = 0L;
         this.count = 0;
