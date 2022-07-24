@@ -4,40 +4,45 @@ import net.runelite.api.coords.WorldPoint;
 import simple.hooks.filters.SimplePrayers;
 import simple.hooks.filters.SimpleSkills;
 import simple.hooks.scripts.Category;
+import simple.hooks.scripts.LoopingScript;
 import simple.hooks.scripts.ScriptManifest;
+import simple.hooks.scripts.task.Task;
+import simple.hooks.scripts.task.TaskScript;
 import simple.hooks.simplebot.ChatMessage;
 import simple.hooks.simplebot.Game;
 import simple.hooks.simplebot.teleporter.Teleporter;
 import simple.hooks.wrappers.*;
 import simple.robot.api.ClientContext;
-import simple.robot.script.Script;
 import simple.robot.utils.WorldArea;
 
 import java.awt.*;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 @ScriptManifest(author = "Esmaabi", category = Category.MONEYMAKING, description =
         "<br><br>Kills spiritual mages for dragon boots!<br><br>"
         + "<b>Info:</b><br>"
-        + "Start <b>anywhere</b>.<br>"
-        + "You must have enough of prayer potions.<br> "
-        + "Supported home in <b>Edge</b> or in <b>Donor Zone</b>.<br>"
-        + "You must setup last-preset correctly.<br>"
-        + "Any dragon dagger spec supported<br>"
+        + "Start <b>anywhere</b> or continue at zamorak area.<br>"
+        + "You must have banked enough of prayer or attack/strength potions.<br> "
+        + "Supported home in <b>Edge village</b> or <b>Regular Donor Zone</b>.<br>"
+        + "You must setup last-preset correctly (Att, def, pray pots).<br>"
+        + "Any dragon dagger or dragon mace spec supported<br>"
         + "Piety prayer flick supported<br>"
-        + "Teleports home at 55hp!",
+        + "Teleports home at 55hp!<br><br>",
         discord = "Esmaabi#5752",
-        name = "eSpiritualMagesKillerZaros", servers = { "Zaros" }, version = "0.2")
+        name = "eSpiritualMagesKillerZaros", servers = { "Zaros" }, version = "0.3")
 
-public class eMain extends Script {
+public class eMain extends TaskScript implements LoopingScript {
     //coordinates
     private final WorldArea EDGE = new WorldArea(new WorldPoint(3072, 3507, 0), new WorldPoint(3111, 3464, 0));
     private final WorldArea DONOR = new WorldArea(new WorldPoint(1386, 8896, 0), new WorldPoint(1367, 9008, 0));
     private final WorldPoint bridgePoint = new WorldPoint(2885, 5326, 2);
-    //private final WorldPoint bridgeCross = new WorldPoint(2885, 5333, 3);
+    private final WorldPoint bridgeCross = new WorldPoint(2885, 5333, 3);
 
 
     private final WorldPoint[] centerRoom = new WorldPoint[] {
@@ -115,15 +120,32 @@ public class eMain extends Script {
     boolean bootsFound;
     boolean startedBot;
 
-    public final int[] lootingItems= { 30084, 985, 987 };
+    public final int[] lootingItems= { 30084, 985, 987, 989 };
 
     public static int randomSleeping(int minimum, int maximum) {
         return (int)(Math.random() * (maximum - minimum)) + minimum;
     }
 
+    //Tasks
+    java.util.List<Task> tasks = new ArrayList<>();
+
+    @Override
+    public boolean prioritizeTasks() {
+        return true;
+    }
+
+    @Override
+    public List<Task> tasks() {
+        return tasks;
+    }
+
     @Override
     public void onExecute() {
-        System.out.println("Started eMasterFarmerTZaros!");
+
+        tasks.addAll(Arrays.asList());
+
+        System.out.println("Started eSpiritualMagesKillerZaros!");
+        status = "Setting up bot";
         this.teleporter = new Teleporter(ctx);
         this.startTime = System.currentTimeMillis();
         this.startingSkillExp = this.ctx.skills.totalExperience();
@@ -164,6 +186,8 @@ public class eMain extends Script {
     @Override
     public void onProcess() {
 
+        super.onProcess();
+
         if (startedBot) {
 
             if (!firstTeleport) {
@@ -179,6 +203,8 @@ public class eMain extends Script {
             } else {
 
                 if (EDGE.containsPoint(ctx.players.getLocal().getLocation()) || DONOR.containsPoint(ctx.players.getLocal().getLocation())) {
+                    ctx.prayers.prayer(SimplePrayers.Prayers.PROTECT_FROM_MAGIC, false);
+                    ctx.prayers.prayer(SimplePrayers.Prayers.PIETY, false);
                     if (!restoreStats) {
                         status = "Restoring Stats";
                         SimpleObject healingBox = ctx.objects.populate().filter(60003).nearest().next();
@@ -231,12 +257,11 @@ public class eMain extends Script {
                         }
                     } else if (bridgeArea.containsPoint(ctx.players.getLocal().getLocation())) {
                         status = "Crossing bridge";
-                        final SimpleObject o = ctx.objects.populate().filter(26518).filter((i) ->
-                                ctx.pathing.reachable(i.getLocation())).filterHasAction("Climb-off").nearest().next();
+                        final SimpleObject o = ctx.objects.populate().filter(26518).nearest(bridgeCross).next();
                         System.out.println(o);
-                        if (o.validateInteractable()) {
-                            o.click("Climb-off");
-                            ctx.onCondition(() -> ctx.pathing.inMotion() || ctx.players.getLocal().isAnimating(), 5000);
+                        if (o != null && o.validateInteractable()) {
+                            o.click("Climb-off", "Ice bridge");
+                            ctx.onCondition(() -> !bridgeArea.containsPoint(ctx.players.getLocal().getLocation()), 5000);
                         }
                     }
                 } else if (zamorakArea.containsPoint(ctx.players.getLocal().getLocation())) {
@@ -259,7 +284,7 @@ public class eMain extends Script {
                             prayRestoreTask();
                         }
 
-                        if (ctx.prayers.points() >= 20 && !ctx.prayers.prayer(SimplePrayers.Prayers.PROTECT_FROM_MAGIC)) {
+                        if (ctx.prayers.points() > 1 && !ctx.prayers.prayer(SimplePrayers.Prayers.PROTECT_FROM_MAGIC)) {
                             ctx.prayers.prayer(SimplePrayers.Prayers.PROTECT_FROM_MAGIC, true);
                             ctx.game.tab(Game.Tab.INVENTORY);
                         }
@@ -301,7 +326,7 @@ public class eMain extends Script {
                             final SimpleItem potion = ctx.inventory.populate().filter(Pattern.compile("Super strength\\(\\d+\\)")).next();
                             int cached = ctx.skills.level(SimpleSkills.Skills.STRENGTH);
                             if (potion != null && potion.click("Drink")) {
-                                ctx.sleep(600);
+                                ctx.sleep(800);
                                 ctx.onCondition(() -> ctx.skills.level(SimpleSkills.Skills.STRENGTH) > cached, 250, 12);
                             }
                         }
@@ -312,13 +337,13 @@ public class eMain extends Script {
                             final SimpleItem potion = ctx.inventory.populate().filter(Pattern.compile("Super attack\\(\\d+\\)")).next();
                             int cached = ctx.skills.level(SimpleSkills.Skills.ATTACK);
                             if (potion != null && potion.click("Drink")) {
-                                ctx.sleep(600);
+                                ctx.sleep(800);
                                 ctx.onCondition(() -> ctx.skills.level(SimpleSkills.Skills.ATTACK) > cached, 250, 12);
                             }
                         }
 
-                        if (ctx.combat.getSpecialAttackPercentage() > 90 && !ctx.inventory.populate().filter(1215, 1231, 5680, 5698, 20407).isEmpty()) {
-                            final SimpleItem dagger = ctx.inventory.populate().filter(1215, 1231, 5680, 5698, 20407).next();
+                        if (ctx.combat.getSpecialAttackPercentage() > 90 && !ctx.inventory.populate().filter(1215, 1231, 5680, 5698, 20407, 1434).isEmpty()) {
+                            final SimpleItem dagger = ctx.inventory.populate().filter(1215, 1231, 5680, 5698, 20407, 1434).next();
                             if (dagger != null && dagger.validateInteractable() && dagger.click("Wield")) {
                                 ctx.sleep(400);
                                 ctx.combat.toggleSpecialAttack(true);
@@ -326,11 +351,11 @@ public class eMain extends Script {
                             }
                         }
 
-                        if (ctx.combat.getSpecialAttackPercentage() >= 25 && !ctx.equipment.populate().filter(1215, 1231, 5680, 5698, 20407).isEmpty()) {
+                        if (ctx.combat.getSpecialAttackPercentage() >= 25 && !ctx.equipment.populate().filter(1215, 1231, 5680, 5698, 20407, 1434).isEmpty()) {
                             ctx.combat.toggleSpecialAttack(true);
                         }
 
-                        if (ctx.combat.getSpecialAttackPercentage() < 25 && !ctx.equipment.populate().filter(1215, 1231, 5680, 5698, 20407).isEmpty()) {
+                        if (ctx.combat.getSpecialAttackPercentage() < 25 && !ctx.equipment.populate().filter(1215, 1231, 5680, 5698, 20407, 1434).isEmpty()) {
                             final SimpleItem mainWeapon = ctx.inventory.populate().filterHasAction("Wield").next();
                             if (mainWeapon != null && mainWeapon.validateInteractable() && mainWeapon.click("Wield")) {
                                 ctx.onCondition(() -> false, 250, 12);
@@ -343,6 +368,7 @@ public class eMain extends Script {
                         }
 
                         if (!ctx.combat.autoRetaliate()) {
+                            status = "Turning auto retaliate ON";
                             ctx.combat.toggleAutoRetaliate(true);
                         }
 
@@ -394,9 +420,9 @@ public class eMain extends Script {
                     status = "Looting dragon boots";
                     item.click("Take");
                     ctx.onCondition(() ->
-                            ctx.inventory.filter(11840).population() > cached, 1200);
-                    dragonBoots++;
+                            ctx.inventory.filter(11840).population() > cached, 4000);
                     bootsFound = false;
+                    dragonBoots++;
                 }
             } else {
                 prayRestoreTask();
@@ -447,6 +473,11 @@ public class eMain extends Script {
     }
 
     @Override
+    public int loopDuration() {
+        return 150;
+    }
+
+    @Override
     public void paint(Graphics g) {
         Color PhilippineRed = new Color(196, 18, 48);
         Color RaisinBlack = new Color(35, 31, 32, 127);
@@ -461,10 +492,10 @@ public class eMain extends Script {
         long currentSkillExp = this.ctx.skills.totalExperience();
         long SkillExpGained = currentSkillExp - this.startingSkillExp;
         long SkillexpPhour = (int)((SkillExpGained * 3600000D) / runTime);
-        long gpPerHour = (ctx.paint.valuePerHour(dragonBoots, startTime) * 2L);
+        long gpPerHour = (ctx.paint.valuePerHour( dragonBoots, startTime) * 2L);
         g.drawString("Runtime: " + formatTime(runTime), 15, 150);
         g.drawString("Exp gained: " + SkillExpGained + " (" + (SkillexpPhour / 1000L) + "k" + " xp/h)", 15, 165);
-        g.drawString("Dragon boots looted: " + dragonBoots + " (" + ctx.paint.valuePerHour(dragonBoots, startTime) + " per/h)", 15, 180);
+        g.drawString("Dragon boots looted: " + dragonBoots + " (" + ctx.paint.valuePerHour( dragonBoots, startTime) + " per/h)", 15, 180);
         g.drawString("Mages killed: " + count + " (" + ctx.paint.valuePerHour(count, startTime) + " per/h)", 15, 195);
         g.drawString("Money made: " + dragonBoots*2 + "M" + " (~" + gpPerHour + "M gp/h)", 15, 210);
         g.drawString("Status: " + status, 15, 225);

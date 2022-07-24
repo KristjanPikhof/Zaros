@@ -29,7 +29,7 @@ public class eGui extends WindowAdapter {
                         + "If you choose \"Continue\" you can continue killing at Zamorak area.\n"
                         + "\n"
                         + "For more information check out Esmaabi on SimpleBot!",
-                "eMagicPro by Esmaabi",
+                "eSipiritualMagesKiller by Esmaabi",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, eIcon, modeSelect, modeSelect[0]);
     }
 
