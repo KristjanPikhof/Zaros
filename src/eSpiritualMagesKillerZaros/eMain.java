@@ -120,7 +120,7 @@ public class eMain extends TaskScript implements LoopingScript {
     boolean bootsFound;
     boolean startedBot;
 
-    public final int[] lootingItems= { 30084, 985, 987, 989 };
+    public final int[] lootingItems= { 30084, 985, 987, 989, 4091, 20425 };
 
     public static int randomSleeping(int minimum, int maximum) {
         return (int)(Math.random() * (maximum - minimum)) + minimum;
