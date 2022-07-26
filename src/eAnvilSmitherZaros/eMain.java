@@ -23,21 +23,24 @@ import java.util.List;
 import java.util.stream.Stream;
 
 @ScriptManifest(author = "Esmaabi", category = Category.SMITHING,
-        description = "<br>Most effective ::dzone anvil smithing bot on Zaros! <br><br><b>Features & recommendations:</b><br><br>" +
+        description = "<br>Most effective ::dzone or Varrock west anvil smithing bot on Zaros! <br><br><b>Features & recommendations:</b><br><br>" +
         "<ul><li>You must have set <b>Last-preset</b> to hammer + bars;</li>" +
         "<li>You must start <b>with bars in inventory</b>;</li>" +
-        "<li>You must start at regular donor zone anvil;</li>" +
+        "<li>You must start at ::dzone anvil or Varrock west bank;</li>" +
         "<li>Zoom out to <b>see anvil & bank chest</b>;</li>" +
         "<li>Included random sleeping times!</li></ul>",
         discord = "Esmaabi#5752",
-        name = "eAnvilSmitherZaros", servers = { "Zaros" }, version = "0.1")
+        name = "eAnvilSmitherZaros", servers = { "Zaros" }, version = "0.3")
 
 public class eMain extends TaskScript implements LoopingScript {
 
     //coordinates
-    private final WorldArea smithingArea = new WorldArea (new WorldPoint(1358,8996, 0), new WorldPoint(1371,8982, 0));
+    private final WorldArea smithingAreaDonor = new WorldArea (new WorldPoint(1358,8996, 0), new WorldPoint(1371,8982, 0));
+    private final WorldArea smithingAreaVarrock = new WorldArea (new WorldPoint(3177, 3449, 0), new WorldPoint(3196, 3418, 0));
 
     private final WorldPoint anvilLocation = new WorldPoint(1359, 8989, 0);
+    private final WorldPoint anvilLocationVarrock = new WorldPoint(3188, 3426, 0);
+    private final WorldPoint bankBoothVarrock = new WorldPoint(3186, 3436, 0);
 
     //vars
     private Teleporter teleporter;
@@ -45,8 +48,14 @@ public class eMain extends TaskScript implements LoopingScript {
     private long startingSkillLevel;
     private long startingSkillExp;
     private int count;
+    public int smithingWidget;
+    public int sleepTime;
+    public int barsinInv;
     static String status = null;
+    static String nameOfItem = null;
+    public int barsInInventory;
     private long lastAnimation = -1;
+    boolean botStarted = false;
 
     public static int randomSleeping(int minimum, int maximum) {
         return (int)(Math.random() * (maximum - minimum)) + minimum;
@@ -75,19 +84,64 @@ public class eMain extends TaskScript implements LoopingScript {
         tasks.addAll(Arrays.asList());
 
         System.out.println("Started eAnvilSmitherZaros!");
-        status = "Setting up bot";
-        this.teleporter = new Teleporter(ctx);
-        this.startTime = System.currentTimeMillis();
-        this.startingSkillLevel = this.ctx.skills.realLevel(SimpleSkills.Skills.SMITHING);
-        this.startingSkillExp = this.ctx.skills.experience(SimpleSkills.Skills.SMITHING);
-        count = 0;
-        ctx.viewport.angle(0);
-        ctx.viewport.pitch(true);
+
+
 
         this.ctx.updateStatus("--------------- " + currentTime() + " ---------------");
         this.ctx.updateStatus("-------------------------------");
         this.ctx.updateStatus("       eAnvilSmitherZaros      ");
         this.ctx.updateStatus("-------------------------------");
+
+        status = "Setting up bot";
+        this.teleporter = new Teleporter(ctx);
+        this.startTime = System.currentTimeMillis();
+        this.startingSkillLevel = this.ctx.skills.realLevel(SimpleSkills.Skills.SMITHING);
+        this.startingSkillExp = this.ctx.skills.experience(SimpleSkills.Skills.SMITHING);
+        botStarted = false;
+        barsInInventory = 0;
+        count = 0;
+        ctx.viewport.angle(270);
+        ctx.viewport.pitch(true);
+
+        barsinInv = getItem("bar");
+
+        if (barsinInv == 0) {
+            ctx.updateStatus("Bars in inventory NOT FOUND");
+            status = "Bars in inventory NOT FOUND";
+            ctx.sleep(4200);
+            status = "Stopping script";
+            ctx.updateStatus("Stopping script");
+            ctx.stopScript();
+        } else {
+            ctx.updateStatus("Bars in inventory found");
+            status = "Bars in inventory found";
+        }
+
+        eGui.eGuiDialogueTarget();
+        if (eGui.returnItem == "Sword") {
+            nameOfItem = "swords";
+            ctx.updateStatus("Making " + nameOfItem);
+            smithingWidget = 10;
+            barsInInventory = 0;
+            sleepTime = randomSleeping(1200, 12800);
+            botStarted = true;
+        } else if (eGui.returnItem == "Platebody") {
+            nameOfItem = "platebodies";
+            ctx.updateStatus("Making " + nameOfItem);
+            smithingWidget = 22;
+            barsInInventory = 4;
+            sleepTime = randomSleeping(1200, 6400);
+            botStarted = true;
+        } else if (eGui.returnItem == "Dart tips") {
+            nameOfItem = "dart tips";
+            ctx.updateStatus("Making " + nameOfItem);
+            smithingWidget = 29;
+            barsInInventory = 0;
+            sleepTime = randomSleeping(1200, 12800);
+            botStarted = true;
+        } else {
+            status = "Waiting for GUI options";
+        }
 
 
     }
@@ -96,60 +150,102 @@ public class eMain extends TaskScript implements LoopingScript {
     public void onProcess() {
         super.onProcess();
 
-
-        if (smithingArea.containsPoint(ctx.players.getLocal().getLocation())) {
-            if (ctx.inventory.populate().filter(getItem("bar")).isEmpty()) {
-                status = "Banking";
-                openingBank();
-            } else if (!ctx.inventory.populate().filter(getItem("bar")).isEmpty()) {
-                status = "Using anvil";
-                if (!ctx.players.getLocal().isAnimating() && (System.currentTimeMillis() > (lastAnimation + 4000))) {
-                    smithingTask();
-                } else if (ctx.players.getLocal().isAnimating()) {
-                    lastAnimation = System.currentTimeMillis();
-                }
-            } else {
-                ctx.updateStatus(currentTime() + " Unknown error -> restarting");
-                openingBank();
-            }
+        if (botStarted) {
 
             if (ctx.pathing.energyLevel() > 30 && !ctx.pathing.running()) {
                 ctx.pathing.running(true);
             }
 
-        } else {
-            status = "Player not in smithing area";
-            ctx.updateStatus(currentTime() + " Player not in smithing area");
-            ctx.updateStatus(currentTime() + " Stopping script");
-            ctx.sleep(2400);
-            ctx.stopScript();
-        }
+            if (smithingAreaVarrock.containsPoint(ctx.players.getLocal().getLocation()) ||
+                    smithingAreaDonor.containsPoint(ctx.players.getLocal().getLocation())) {
 
+                if (ctx.inventory.populate().filter(barsinInv).population() <= barsInInventory) {
+                    if (smithingAreaVarrock.containsPoint(ctx.players.getLocal().getLocation())) {
+                        openingBankVarrock();
+                    } else if (smithingAreaDonor.containsPoint(ctx.players.getLocal().getLocation())) {
+                        openingBank();
+                    }
+
+                } else if (ctx.inventory.populate().filter(barsinInv).population() > barsInInventory) {
+                    if (!ctx.players.getLocal().isAnimating() && (System.currentTimeMillis() > (lastAnimation + 4000))) {
+                        if (smithingAreaVarrock.containsPoint(ctx.players.getLocal().getLocation())) {
+                            smithingTaskVarrock();
+                        } else if (smithingAreaDonor.containsPoint(ctx.players.getLocal().getLocation())) {
+                            smithingTask();
+                        }
+                    } else if (ctx.players.getLocal().isAnimating()) {
+                        lastAnimation = System.currentTimeMillis();
+                    }
+
+                } else {
+                    ctx.updateStatus(currentTime() + " Unknown error -> restarting");
+                    status = "Unknown error";
+                    if (smithingAreaVarrock.containsPoint(ctx.players.getLocal().getLocation())) {
+                        openingBankVarrock();
+                    } else if (smithingAreaDonor.containsPoint(ctx.players.getLocal().getLocation())) {
+                        openingBank();
+                    }
+                }
+
+            } else {
+                status = "Player not in smithing area";
+                ctx.updateStatus(currentTime() + " Player not in smithing area");
+                ctx.updateStatus(currentTime() + " Stopping script");
+                ctx.sleep(2400);
+                ctx.stopScript();
+            }
+
+        }
     }
 
     public void openingBank() {
         SimpleObject bankChest = ctx.objects.populate().filter("Bank chest").filterHasAction("Last-preset").nearest().next();
-        if (bankChest != null && bankChest.validateInteractable()) {
-            int sleepTime = randomSleeping(1200, 12800);
+        if (bankChest != null && bankChest.validateInteractable() && !ctx.pathing.inMotion()) {
             status = "Sleeping to bank (" + sleepTime + "ms)";
             ctx.sleep(sleepTime);
             status = "Refilling supplies";
             bankChest.click("Last-preset", "Bank chest");
-            ctx.sleepCondition(() -> !ctx.inventory.populate().filter(getItem("bar")).isEmpty(), randomSleeping(1200, 4800));
+            ctx.onCondition(() -> ctx.inventory.populate().filter(barsinInv).population() > barsInInventory, 5000);
+        }
+    }
+
+    public void openingBankVarrock() {
+        SimpleObject bankBooth = ctx.objects.populate().filter("Bank booth").nearest().next();
+        if (bankBooth != null && bankBooth.validateInteractable() && !ctx.pathing.inMotion()) {
+            status = "Sleeping to bank (" + sleepTime + "ms)";
+            ctx.sleep(sleepTime);
+            status = "Refilling supplies";
+            bankBooth.click("Last-preset", "Bank booth");
+            ctx.onCondition(() -> ctx.inventory.populate().filter(barsinInv).population() > barsInInventory, 5000);
         }
     }
 
     public void smithingTask() {
         SimpleObject anvil = ctx.objects.populate().filter("Anvil").nearest(anvilLocation).next();
         SimpleWidget widgetScreen = ctx.widgets.getWidget(312, 0);
-        SimpleWidget mithDarts = ctx.widgets.getWidget(312, 29);
-        if (anvil != null && anvil.validateInteractable() && widgetScreen == null) {
+        SimpleWidget smithingItem = ctx.widgets.getWidget(312, smithingWidget);
+        if (anvil != null && anvil.validateInteractable() && widgetScreen == null && !ctx.pathing.inMotion()) {
             status = "Clicking anvil";
-            anvil.click("Smith");
-            ctx.sleepCondition(() -> ctx.pathing.inMotion(), randomSleeping(1200, 3600));
-        } else if (widgetScreen != null && mithDarts != null && !ctx.players.getLocal().isAnimating()) {
-            status = "Making dart tips";
-            mithDarts.click(0);
+            anvil.click("Smith", "Anvil");
+            ctx.sleepCondition(() -> ctx.pathing.inMotion(), 5000);
+        } else if (widgetScreen != null && smithingItem != null && !ctx.players.getLocal().isAnimating()) {
+            status = "Making " + nameOfItem;
+            smithingItem.click(0);
+            ctx.onCondition(() -> ctx.players.getLocal().isAnimating(), 5000);
+        }
+    }
+
+    public void smithingTaskVarrock() {
+        SimpleObject anvil = ctx.objects.populate().filter("Anvil").nearest(anvilLocationVarrock).next();
+        SimpleWidget widgetScreen = ctx.widgets.getWidget(312, 0);
+        SimpleWidget smithingItem = ctx.widgets.getWidget(312, smithingWidget);
+        if (anvil != null && anvil.validateInteractable() && widgetScreen == null && !ctx.pathing.inMotion()) {
+            status = "Clicking anvil";
+            anvil.click("Smith", "Anvil");
+            ctx.onCondition(() -> ctx.pathing.inMotion(), 5000);
+        } else if (widgetScreen != null && smithingItem != null && !ctx.players.getLocal().isAnimating()) {
+            status = "Making " + nameOfItem;
+            smithingItem.click(0);
             ctx.onCondition(() -> ctx.players.getLocal().isAnimating(), 5000);
         }
     }
