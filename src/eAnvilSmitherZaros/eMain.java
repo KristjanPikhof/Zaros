@@ -210,7 +210,7 @@ public class eMain extends TaskScript implements LoopingScript {
     }
 
     public void openingBankVarrock() {
-        SimpleObject bankBooth = ctx.objects.populate().filter("Bank booth").nearest().next();
+        SimpleObject bankBooth = ctx.objects.populate().filter("Bank booth").nearest(bankBoothVarrock).next();
         if (bankBooth != null && bankBooth.validateInteractable() && !ctx.pathing.inMotion()) {
             status = "Sleeping to bank (" + sleepTime + "ms)";
             ctx.sleep(sleepTime);
