@@ -4,6 +4,7 @@ import eAioAgilityBotZaros.tasks.*;
 import simple.hooks.filters.SimpleEquipment;
 import simple.hooks.filters.SimpleSkills;
 import simple.hooks.scripts.Category;
+import simple.hooks.scripts.LoopingScript;
 import simple.hooks.scripts.ScriptManifest;
 import simple.hooks.scripts.task.TaskScript;
 import simple.hooks.simplebot.ChatMessage;
@@ -20,17 +21,21 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @ScriptManifest(author = "Esmaabi", category = Category.AGILITY, description =
         "<br>AIO agility training bot for rooftops courses<br><br>" +
                 "<b>Start anywhere</b> and <b>select preferred</b> course in GUI.<br><br>" +
-                "You <b>must</b> be using <b>normal spellbook</b>.<br><br>" +
+                "You <b>must</b> be using <b>normal spellbook</b>.<br>" +
+                "Supported mark of grace pickup- or ring of wealth banking method.<br><br>" +
                 "Supported courses:<br>" +
                 "Al-Kharid, Varrock, Canifis, Seers,<br> Pollnivneach, Rellekka, Ardougne",
         discord = "Esmaabi#5752",
-        name = "eAioAgilityBotZaros", servers = { "Zaros" }, version = "0.7")
+        name = "eAioAgilityBotZaros", servers = { "Zaros" }, version = "1")
 
-public class eMain extends TaskScript {
+public class eMain extends TaskScript  implements LoopingScript {
 
     private List tasks = new ArrayList();
 
@@ -45,6 +50,12 @@ public class eMain extends TaskScript {
     public static boolean firstTeleport;
     public static long lastHP;
     private long lastAnimation;
+    boolean ringOfWealthEqupped = false;
+
+    @Override
+    public int loopDuration() {
+        return 600;
+    }
 
     public enum State {
         ALKHARID,
@@ -69,6 +80,7 @@ public class eMain extends TaskScript {
                 new eArdougneR(ctx)
         ));// Adds our tasks to our {task} list for execution
 
+        //settings
         System.out.println("Started eAioAgilityBot!");
         startMarks = ctx.inventory.populate().filter(11849).population(true);
         startTime = System.currentTimeMillis(); //paint
@@ -80,38 +92,43 @@ public class eMain extends TaskScript {
         totalMarks = 0;
         firstTeleport = false;
         status = "Setting up script";
-
-        ctx.viewport.angle(0);
-        ctx.viewport.pitch(true);
         lastAnimation = System.currentTimeMillis() + 20000;
 
+        //GUI
         eAioAgilityBotZaros.eGui.eGuiDialogue();
-        if (eGui.courseName == "Al-Kharid Rooftop") {
+        if (Objects.equals(eGui.courseName, "Al-Kharid Rooftop")) {
             courseName = eAioAgilityBotZaros.eMain.State.ALKHARID;
-        } else if (eGui.courseName == "Varrock Rooftop") {
+        } else if (Objects.equals(eGui.courseName, "Varrock Rooftop")) {
             courseName = eAioAgilityBotZaros.eMain.State.VARROCK;
-        } else if (eGui.courseName == "Canifis Rooftop") {
+        } else if (Objects.equals(eGui.courseName, "Canifis Rooftop")) {
             courseName = eAioAgilityBotZaros.eMain.State.CANIFIS;
-        } else if (eGui.courseName == "Seers Rooftop") {
+        } else if (Objects.equals(eGui.courseName, "Seers Rooftop")) {
             courseName = eAioAgilityBotZaros.eMain.State.SEERS;
-        } else if (eGui.courseName == "Pollnivneach Rooftop") {
+        } else if (Objects.equals(eGui.courseName, "Pollnivneach Rooftop")) {
             courseName = eAioAgilityBotZaros.eMain.State.POLLNIVNEACH;
-        } else if (eGui.courseName == "Rellekka Rooftop") {
+        } else if (Objects.equals(eGui.courseName, "Rellekka Rooftop")) {
             courseName = eAioAgilityBotZaros.eMain.State.RELLEKKA;
-        } else if (eGui.courseName == "Ardougne Rooftop") {
+        } else if (Objects.equals(eGui.courseName, "Ardougne Rooftop")) {
             courseName = eAioAgilityBotZaros.eMain.State.ARDOUGNE;
         } else {
             courseName = eAioAgilityBotZaros.eMain.State.WAITING;
         }
 
-        //counting marks of grace
+        // viewport settings
+        ctx.viewport.angle(0);
+        ctx.viewport.pitch(true);
+
+        //counting marks of grace method
         SimpleItem ringOfWealth = ctx.equipment.getEquippedItem(SimpleEquipment.EquipmentSlot.RING);
-        if (ringOfWealth != null && ringOfWealth.getName().contains("wealth")) {
+        if (ringOfWealth != null && ringOfWealth.getName().contains("Ring of wealth")) {
+            ringOfWealthEqupped = true;
             totalMarks = 0;
             ctx.updateStatus("Ring of wealth equipped");
+            ctx.updateStatus("Adjusting marks of grace counting method");
         } else {
-            totalMarks = ctx.inventory.populate().filter(11849).population(true) - startMarks;
+            ringOfWealthEqupped = false;
             ctx.updateStatus("Ring of wealth not equipped");
+            ctx.updateStatus("Adjusting marks of grace counting method");
         }
     }
 
@@ -135,7 +152,7 @@ public class eMain extends TaskScript {
     @Override
     public void onProcess() {
         // Can add anything here before tasks have been ran
-        super.onProcess();// Needed for the TaskScript to process the tasks
+        super.onProcess();
         final Pathing pathing = ctx.pathing;
 
         if (!pathing.running() && pathing.energyLevel() >= 50) {
@@ -189,6 +206,11 @@ public class eMain extends TaskScript {
 
     @Override
     public void paint(Graphics g) {
+
+        if (!ringOfWealthEqupped) {
+            totalMarks = ctx.inventory.populate().filter(11849).population(true) - startMarks;
+        }
+
         Color PhilippineRed = new Color(196, 18, 48);
         Color RaisinBlack = new Color(35, 31, 32, 127);
         g.setColor(RaisinBlack);
@@ -212,18 +234,28 @@ public class eMain extends TaskScript {
         g.drawString("Status: " + status, 15, 225);
     }
 
+    public static int getIntFromChat(String chatMessageMOG) {
+        Pattern ints = Pattern.compile("\\d+");
+        Matcher makeMatch = ints.matcher(chatMessageMOG);
+        makeMatch.find();
+        String result = makeMatch.group();
+        return Integer.parseInt(result);
+    }
+
     @Override
     public void onChatMessage(ChatMessage m) {
         if (m.getMessage() != null) {
             String message = m.getMessage().toLowerCase();
+            boolean bankedMOG = message.contains("x marks of grace to your bank");
             if (message.contains(ctx.players.getLocal().getName().toLowerCase())) {
                 ctx.updateStatus(currentTime() + " Someone asked for you");
                 ctx.updateStatus(currentTime() + " Stopping script");
                 ctx.stopScript();
             } else if (message.contains("lap count is")) {
                 count++;
-            } else if (message.contains("x marks of grace to your bank")) {
-                totalMarks +=2;
+            } else if (bankedMOG && ringOfWealthEqupped) {
+                String newMessage = m.getFormattedMessage();
+                totalMarks += getIntFromChat(newMessage);
             }
         }
     }
