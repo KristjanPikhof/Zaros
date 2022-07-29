@@ -38,7 +38,6 @@ import simple.robot.utils.WorldArea;
 public class eMain extends TaskScript implements LoopingScript {
     //coordinates
     private final WorldArea ANGLER = new WorldArea(new WorldPoint(1841, 3799, 0), new WorldPoint(1792, 3767, 0));
-    //private final WorldArea ANGLER_BANK = new WorldArea (new WorldPoint(1793,3794, 0), new WorldPoint(1812,3783, 0));
 
     private static final WorldArea ANGLER_BANK = new WorldArea(
             new WorldPoint(1815, 3784, 0),
@@ -141,12 +140,13 @@ public class eMain extends TaskScript implements LoopingScript {
 
             } else {
                 status = "Browsing for anglerfish tele";
-                teleporter.teleportStringPath("Skilling", "Fishing: Anglerfish");
-                ctx.onCondition(() -> ANGLER.containsPoint(ctx.players.getLocal().getLocation()), 2400);
-                ctx.game.tab(Game.Tab.INVENTORY);
-                firstTeleport = true;
-                fishingState = false;
-                status = "Setup completed";
+                if (teleporter.teleportStringPath("Skilling", "Fishing: Anglerfish")) {
+                    ctx.onCondition(() -> ANGLER.containsPoint(ctx.players.getLocal().getLocation()), 2400);
+                    ctx.game.tab(Game.Tab.INVENTORY);
+                    firstTeleport = true;
+                    fishingState = false;
+                    status = "Setup completed";
+                }
             }
 
         } else {
