@@ -6,6 +6,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ThreadLocalRandom;
 
+import jdk.internal.util.xml.impl.Pair;
 import net.runelite.api.coords.WorldPoint;
 import simple.hooks.filters.SimpleSkills;
 import simple.hooks.scripts.Category;
@@ -26,21 +27,76 @@ import simple.robot.utils.WorldArea;
                 "<ul><li>You must have <b>fishing rod</b> and <b>sandworms</b> in inventory;</li>" +
                 "<li>You can start script anywhere;</li>" +
                 "<li>Supported special attack with dragon harpoon equipped;</li>" +
-                "<li>Included <b>anti-ban</b> features!</li></ul>",
+                "<li>Supported <b>spirit flakes</b> in inventory;</li>" +
+                "<li>Included <b>anti-ban</b> option!</li></ul>",
         discord = "Esmaabi#5752",
-        name = "eAnglerFisherZaros", servers = { "Zaros" }, version = "2.6")
+        name = "eAnglerFisherZaros", servers = { "Zaros" }, version = "3")
 
-public class eMain extends Script{
+public class eMain extends Script {
     //coordinates
-    private final WorldArea ANGLER = new WorldArea (new WorldPoint(1841,3799, 0), new WorldPoint(1792,3767, 0));
-    private final WorldArea ANGLER_BANK = new WorldArea (new WorldPoint(1793,3794, 0), new WorldPoint(1812,3783, 0));
+    private final WorldArea ANGLER = new WorldArea(new WorldPoint(1841, 3799, 0), new WorldPoint(1792, 3767, 0));
+    //private final WorldArea ANGLER_BANK = new WorldArea (new WorldPoint(1793,3794, 0), new WorldPoint(1812,3783, 0));
 
-    private static final WorldArea ANGLER_SPOT = new WorldArea (
-            new WorldPoint(1839,3781,0),
-            new WorldPoint(1829,3781,0),
-            new WorldPoint(1822,3767,0),
-            new WorldPoint(1834,3768,0),
-            new WorldPoint(1841,3774,0));
+    private static final WorldArea ANGLER_BANK = new WorldArea(
+            new WorldPoint(1815, 3784, 0),
+            new WorldPoint(1815, 3779, 0),
+            new WorldPoint(1792, 3779, 0),
+            new WorldPoint(1792, 3798, 0),
+            new WorldPoint(1815, 3798, 0));
+
+    private static final WorldArea ANGLER_SPOT = new WorldArea(
+            new WorldPoint(1815, 3784, 0),
+            new WorldPoint(1815, 3778, 0),
+            new WorldPoint(1805, 3778, 0),
+            new WorldPoint(1805, 3770, 0),
+            new WorldPoint(1809, 3768, 0),
+            new WorldPoint(1840, 3768, 0),
+            new WorldPoint(1847, 3786, 0));
+
+    //walkingtToFishing
+    private final WorldPoint[] walkingTo1 = new WorldPoint[]{
+            new WorldPoint(1813, 3783, 0),
+            new WorldPoint(1818, 3779, 0),
+            new WorldPoint(1822, 3776, 0),
+            new WorldPoint(1825, 3772, 0),
+            new WorldPoint(1826, 3771, 0)
+    };
+
+    private final WorldPoint[] walkingTo2 = new WorldPoint[]{
+            new WorldPoint(1809, 3781, 0),
+            new WorldPoint(1815, 3779, 0),
+            new WorldPoint(1821, 3774, 0),
+            new WorldPoint(1823, 3773, 0),
+            new WorldPoint(1827, 3771, 0)
+    };
+
+    private final WorldPoint[] walkingTo3 = new WorldPoint[]{
+            new WorldPoint(1814, 3783, 0),
+            new WorldPoint(1818, 3779, 0),
+            new WorldPoint(1822, 3779, 0),
+            new WorldPoint(1825, 3777, 0),
+            new WorldPoint(1829, 3775, 0),
+            new WorldPoint(1832, 3773, 0),
+            new WorldPoint(1836, 3772, 0)
+    };
+
+    private final WorldPoint[] walkingTo4 = new WorldPoint[]{
+            new WorldPoint(1810, 3781, 0),
+            new WorldPoint(1817, 3781, 0),
+            new WorldPoint(1821, 3780, 0),
+            new WorldPoint(1830, 3778, 0),
+            new WorldPoint(1836, 3777, 0),
+            new WorldPoint(1838, 3776, 0)
+    };
+
+    private final WorldPoint[] walkingTo5 = new WorldPoint[]{
+            new WorldPoint(1811, 3781, 0),
+            new WorldPoint(1817, 3779, 0),
+            new WorldPoint(1823, 3777, 0),
+            new WorldPoint(1828, 3775, 0),
+            new WorldPoint(1834, 3770, 0)
+    };
+
 
     //vars
     private Teleporter teleporter;
@@ -51,17 +107,19 @@ public class eMain extends Script{
     static String status = null;
     boolean firstTeleport;
     boolean fishingState;
+    boolean runningState = false;
     public static State playerState;
     private long lastAnimation = -1;
+
     public static int randomSleeping(int minimum, int maximum) {
-        return (int)(Math.random() * (maximum - minimum)) + minimum;
+        return (int) (Math.random() * (maximum - minimum)) + minimum;
     }
 
     public static String currentTime() {
         return LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
     }
 
-    enum State{
+    enum State {
         ANTIBAN_ACTIVATED,
         ANTIBAN_DEACTIVATED,
         WAITING,
@@ -100,9 +158,11 @@ public class eMain extends Script{
     @Override
     public void onProcess() {
         if (!firstTeleport) {
+
             if (!teleporter.opened()) {
                 status = "First teleport to fishing spot";
                 ctx.magic.castSpellOnce("Skilling Teleport");
+
             } else {
                 status = "Browsing for anglerfish tele";
                 teleporter.teleportStringPath("Skilling", "Fishing: Anglerfish");
@@ -112,56 +172,47 @@ public class eMain extends Script{
                 fishingState = false;
                 status = "Setup completed";
             }
+
         } else {
-            if (playerState == State.ANTIBAN_ACTIVATED) {
-                if (ANGLER.containsPoint(ctx.players.getLocal().getLocation())) {
-                    if (ANGLER_BANK.containsPoint(ctx.players.getLocal().getLocation()) && !fishingState) {
-                        bankingFish();
-                    } else if (ctx.inventory.populate().population() == 2 && !ANGLER_SPOT.containsPoint(ctx.players.getLocal().getLocation()) && fishingState) {
-                        fishingAnglersInstant();
-                    } else if (ANGLER_SPOT.containsPoint(ctx.players.getLocal().getLocation()) && fishingState) {
-                        if (ctx.inventory.populate().population() == 28) {
+
+            if (ANGLER.containsPoint(ctx.players.getLocal().getLocation())) {
+                if (ANGLER_BANK.containsPoint(ctx.players.getLocal().getLocation()) && !fishingState) {
+                    bankingFish();
+                } else if (ANGLER_BANK.containsPoint(ctx.players.getLocal().getLocation()) && fishingState) {
+                    status = "Running to fishing area";
+                    if (!ctx.pathing.inMotion()) {
+                        takingStepsRandom();
+                    }
+                } else if (ANGLER_SPOT.containsPoint(ctx.players.getLocal().getLocation()) && fishingState) {
+                    if (ctx.inventory.populate().population() == 28) {
+                        if (playerState == State.ANTIBAN_ACTIVATED) {
                             teleportingToBank();
-                        } else if (ctx.inventory.populate().population() < 28) {
-                            if (ctx.players.getLocal().getAnimation() != 622 && (System.currentTimeMillis() > (lastAnimation + 3000))) {
+                        } else {
+                            teleportingToBankInstant();
+                        }
+                    } else if (ctx.inventory.populate().population() < 28) {
+                        if (ctx.players.getLocal().getAnimation() != 622 && (System.currentTimeMillis() > (lastAnimation + 4000))) {
+                            if (playerState == State.ANTIBAN_ACTIVATED && !runningState) {
                                 fishingAnglers();
-                            } else if (ctx.players.getLocal().getAnimation() == 622) {
-                                lastAnimation = System.currentTimeMillis();
+                            } else if (runningState || playerState == State.ANTIBAN_DEACTIVATED) {
+                                fishingAnglersInstant();
                             }
+                        } else if (ctx.players.getLocal().getAnimation() == 622) {
+                            lastAnimation = System.currentTimeMillis();
                         }
                     }
-                } else {
-                    ctx.updateStatus(currentTime() + " Not in Anglers area");
-                    ctx.updateStatus(currentTime() + " Stopping script");
-                    ctx.stopScript();
                 }
 
-            } else if (playerState == State.ANTIBAN_DEACTIVATED) {
-                if (ANGLER.containsPoint(ctx.players.getLocal().getLocation())) {
-                    if (ANGLER_BANK.containsPoint(ctx.players.getLocal().getLocation()) && !fishingState) {
-                        bankingFish();
-                    } else if (ctx.inventory.populate().population() == 2 && !ANGLER_SPOT.containsPoint(ctx.players.getLocal().getLocation()) && fishingState) {
-                        fishingAnglersInstant();
-                    } else if (ANGLER_SPOT.containsPoint(ctx.players.getLocal().getLocation()) && fishingState) {
-                        if (ctx.inventory.populate().population() == 28) {
-                            teleportingToBankInstant();
-                        } else if (ctx.inventory.populate().population() < 28) {
-                            if (ctx.players.getLocal().getAnimation() != 622 && (System.currentTimeMillis() > (lastAnimation + 3000))) {
-                                fishingAnglersInstant();
-                            } else if (ctx.players.getLocal().getAnimation() == 622) {
-                                lastAnimation = System.currentTimeMillis();
-                            }
-                        }
-                    }
-                } else {
-                    ctx.updateStatus(currentTime() + " Not in Anglers area");
-                    ctx.updateStatus(currentTime() + " Stopping script");
-                    ctx.stopScript();
-                }
+            } else {
+                ctx.updateStatus(currentTime() + " Not in Anglers area");
+                ctx.updateStatus(currentTime() + " Stopping script");
+                ctx.stopScript();
             }
         }
 
-        if (ctx.combat.getSpecialAttackPercentage() == 100 && ctx.equipment.populate().filter("Dragon harpoon").population() == 1 && ctx.players.getLocal().getAnimation() == 622) {
+        if (ctx.combat.getSpecialAttackPercentage() == 100
+                && ctx.equipment.populate().filter("Dragon harpoon").population() == 1
+                && ctx.players.getLocal().getAnimation() == 622) {
             ctx.sleep(randomSleeping(1200, 24000));
             ctx.combat.toggleSpecialAttack(true);
         }
@@ -173,60 +224,61 @@ public class eMain extends Script{
 
     public void fishingAnglers() {
         SimpleNpc anglerFish = ctx.npcs.populate().filter(6825).nearest().next();
-        if (anglerFish != null && anglerFish.validateInteractable()) {
-            status = "Sleeping (anti-ban)";
-            ctx.sleep(randomSleeping(1200, 24000));
-            status = "Fishing";
-            anglerFish.click("Bait", "Rod Fishing spot");
-            ctx.onCondition(() -> ctx.players.getLocal().getAnimation() == 622, 2400);
-        } else if (anglerFish == null && ANGLER.containsPoint(ctx.players.getLocal().getLocation())) {
-            status = "Running to fishing spot";
-            takingStepsRandom();
-            ctx.sleepCondition(() -> ANGLER_SPOT.containsPoint(ctx.players.getLocal().getLocation()), 2400);
-        } else {
-            status = "NPC not found";
-            ctx.updateStatus(currentTime() + " NPC not found");
-            ctx.updateStatus(currentTime() + " Stopping script");
-            ctx.stopScript();
+        status = "Fishing";
+        if (ANGLER_SPOT.containsPoint(ctx.players.getLocal().getLocation())) {
+            if (anglerFish != null && anglerFish.validateInteractable()) {
+                int sleepingTime = randomSleeping(1200, 24000);
+                status = "Sleeping for " + sleepingTime + "ms";
+                ctx.sleep(sleepingTime);
+                status = "Fishing";
+                if (anglerFish.click("Bait", "Rod Fishing spot")) {
+                    ctx.onCondition(() -> ctx.players.getLocal().getAnimation() == 622, 2400);
+                }
+            } else if (anglerFish == null && !ctx.pathing.inMotion()) {
+                status = "Running to fishing area";
+                takingStepsRandom();
+            }
         }
     }
 
     public void fishingAnglersInstant() {
         SimpleNpc anglerFish = ctx.npcs.populate().filter(6825).nearest().next();
         status = "Fishing";
-        if (anglerFish != null && anglerFish.validateInteractable()) {
-            anglerFish.click("Bait", "Rod Fishing spot");
-            ctx.onCondition(() -> ctx.players.getLocal().getAnimation() == 622, 2400);
-        } else if (anglerFish == null && ANGLER.containsPoint(ctx.players.getLocal().getLocation())) {
-            status = "Running to fishing spot";
-            takingStepsRandom();
-            ctx.sleepCondition(() -> ANGLER_SPOT.containsPoint(ctx.players.getLocal().getLocation()), 2400);
-        } else {
-            status = "NPC not found";
-            ctx.updateStatus(currentTime() + " NPC not found");
-            ctx.updateStatus(currentTime() + " Stopping script");
-            ctx.stopScript();
+        if (ANGLER_SPOT.containsPoint(ctx.players.getLocal().getLocation())) {
+            if (anglerFish != null && anglerFish.validateInteractable()) {
+                status = "Fishing";
+                if (anglerFish.click("Bait", "Rod Fishing spot")) {
+                    ctx.onCondition(() -> ctx.players.getLocal().getAnimation() == 622, 2400);
+                    runningState = false;
+                }
+            } else if (anglerFish == null) {
+                status = "Running to fishing spot";
+                takingStepsRandom();
+            }
         }
     }
 
     public void bankingFish() {
-        if (ctx.inventory.populate().population() > 2) {
+        if (ctx.inventory.populate().population() > 3) {
             SimpleObject bank = ctx.objects.populate().filter("Bank booth").nearest().next();
             status = "Finding bank";
             if (bank != null && bank.validateInteractable() && !ctx.bank.bankOpen()) {
-                status = "Banking";
+                status = "Opening bank";
                 bank.click("Bank", "Bank booth");
                 ctx.onCondition(() -> ctx.bank.bankOpen(), 2400);
             } else if (ctx.bank.bankOpen()) {
                 status = "Banking";
-                ctx.bank.depositAllExcept(307, 13431);
+                ctx.bank.depositAllExcept(307, 13431, 25588);
                 ctx.sleep(600);
                 ctx.bank.closeBank();
                 ctx.viewport.angle(randomSleeping(190, 220));
+                ctx.viewport.pitch(true);
                 fishingState = true;
+                runningState = true;
             }
-        } else if (ctx.inventory.populate().population() == 2) {
+        } else if (ctx.inventory.populate().population() <= 3) {
             fishingState = true;
+            runningState = true;
         }
     }
 
@@ -234,26 +286,35 @@ public class eMain extends Script{
         int max = 7;
         int min = 1;
         int randomNum = ThreadLocalRandom.current().nextInt(min, max + 1);
+        status = "Taking random steps";
         if (randomNum == 1) {
+            status = "Taking steps using road 1";
             ctx.pathing.step(1827, 3771);
         } else if (randomNum == 2) {
+            status = "Taking steps using road 2";
             ctx.pathing.step(1836, 3772);
         } else if (randomNum == 3) {
+            status = "Taking steps using road 3";
             ctx.pathing.step(1834, 3770);
         } else if (randomNum == 4) {
+            status = "Taking steps using road 4";
             ctx.pathing.step(1839, 3776);
         } else if (randomNum == 5) {
+            status = "Taking steps using road 5";
             ctx.pathing.step(1824, 3772);
         } else if (randomNum == 6) {
+            status = "Taking steps using road 6";
             ctx.pathing.step(1830, 3771);
         } else {
+            status = "Taking steps using road 7";
             ctx.pathing.step(1826, 3771);
         }
     }
 
     public void teleportingToBank() {
-        status = "Sleeping (anti-ban)";
-        ctx.sleep(randomSleeping(1200, 24000));
+        int sleepingTime = randomSleeping(1200, 24000);
+        status = "Sleeping for " + sleepingTime + "ms";
+        ctx.sleep(sleepingTime);
         status = "Teleporting to bank";
         if (!ANGLER_BANK.containsPoint(ctx.players.getLocal().getLocation())) {
                 ctx.game.tab(Game.Tab.MAGIC);
@@ -262,6 +323,7 @@ public class eMain extends Script{
                     ctx.onCondition(() -> ANGLER_BANK.containsPoint(ctx.players.getLocal().getLocation()), 2400);
                     ctx.game.tab(Game.Tab.INVENTORY);
                     fishingState = false;
+                    runningState = false;
                 }
         }
     }
