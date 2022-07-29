@@ -4,19 +4,22 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-import jdk.internal.util.xml.impl.Pair;
 import net.runelite.api.coords.WorldPoint;
 import simple.hooks.filters.SimpleSkills;
 import simple.hooks.scripts.Category;
+import simple.hooks.scripts.LoopingScript;
 import simple.hooks.scripts.ScriptManifest;
+import simple.hooks.scripts.task.Task;
+import simple.hooks.scripts.task.TaskScript;
 import simple.hooks.simplebot.ChatMessage;
 import simple.hooks.simplebot.Game;
 import simple.hooks.wrappers.SimpleNpc;
 import simple.hooks.wrappers.SimpleObject;
 import simple.hooks.wrappers.SimpleWidget;
-import simple.robot.script.Script;
 import simple.hooks.simplebot.teleporter.Teleporter;
 import simple.robot.utils.WorldArea;
 
@@ -30,9 +33,9 @@ import simple.robot.utils.WorldArea;
                 "<li>Supported <b>spirit flakes</b> in inventory;</li>" +
                 "<li>Included <b>anti-ban</b> option!</li></ul>",
         discord = "Esmaabi#5752",
-        name = "eAnglerFisherZaros", servers = { "Zaros" }, version = "3")
+        name = "eAnglerFisherZaros", servers = { "Zaros" }, version = "3.1")
 
-public class eMain extends Script {
+public class eMain extends TaskScript implements LoopingScript {
     //coordinates
     private final WorldArea ANGLER = new WorldArea(new WorldPoint(1841, 3799, 0), new WorldPoint(1792, 3767, 0));
     //private final WorldArea ANGLER_BANK = new WorldArea (new WorldPoint(1793,3794, 0), new WorldPoint(1812,3783, 0));
@@ -52,50 +55,6 @@ public class eMain extends Script {
             new WorldPoint(1809, 3768, 0),
             new WorldPoint(1840, 3768, 0),
             new WorldPoint(1847, 3786, 0));
-
-    //walkingtToFishing
-    private final WorldPoint[] walkingTo1 = new WorldPoint[]{
-            new WorldPoint(1813, 3783, 0),
-            new WorldPoint(1818, 3779, 0),
-            new WorldPoint(1822, 3776, 0),
-            new WorldPoint(1825, 3772, 0),
-            new WorldPoint(1826, 3771, 0)
-    };
-
-    private final WorldPoint[] walkingTo2 = new WorldPoint[]{
-            new WorldPoint(1809, 3781, 0),
-            new WorldPoint(1815, 3779, 0),
-            new WorldPoint(1821, 3774, 0),
-            new WorldPoint(1823, 3773, 0),
-            new WorldPoint(1827, 3771, 0)
-    };
-
-    private final WorldPoint[] walkingTo3 = new WorldPoint[]{
-            new WorldPoint(1814, 3783, 0),
-            new WorldPoint(1818, 3779, 0),
-            new WorldPoint(1822, 3779, 0),
-            new WorldPoint(1825, 3777, 0),
-            new WorldPoint(1829, 3775, 0),
-            new WorldPoint(1832, 3773, 0),
-            new WorldPoint(1836, 3772, 0)
-    };
-
-    private final WorldPoint[] walkingTo4 = new WorldPoint[]{
-            new WorldPoint(1810, 3781, 0),
-            new WorldPoint(1817, 3781, 0),
-            new WorldPoint(1821, 3780, 0),
-            new WorldPoint(1830, 3778, 0),
-            new WorldPoint(1836, 3777, 0),
-            new WorldPoint(1838, 3776, 0)
-    };
-
-    private final WorldPoint[] walkingTo5 = new WorldPoint[]{
-            new WorldPoint(1811, 3781, 0),
-            new WorldPoint(1817, 3779, 0),
-            new WorldPoint(1823, 3777, 0),
-            new WorldPoint(1828, 3775, 0),
-            new WorldPoint(1834, 3770, 0)
-    };
 
 
     //vars
@@ -119,12 +78,29 @@ public class eMain extends Script {
         return LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
     }
 
+    @Override
+    public int loopDuration() {
+        return 1000;
+    }
+
     enum State {
         ANTIBAN_ACTIVATED,
         ANTIBAN_DEACTIVATED,
         WAITING,
     }
 
+    //Tasks
+    java.util.List<Task> tasks = new ArrayList<>();
+
+    @Override
+    public boolean prioritizeTasks() {
+        return true;
+    }
+
+    @Override
+    public List<Task> tasks() {
+        return tasks;
+    }
 
     @Override
     public void onExecute() {
@@ -286,7 +262,6 @@ public class eMain extends Script {
         int max = 7;
         int min = 1;
         int randomNum = ThreadLocalRandom.current().nextInt(min, max + 1);
-        status = "Taking random steps";
         if (randomNum == 1) {
             status = "Taking steps using road 1";
             ctx.pathing.step(1827, 3771);
