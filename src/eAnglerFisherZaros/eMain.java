@@ -79,7 +79,7 @@ public class eMain extends TaskScript implements LoopingScript {
 
     @Override
     public int loopDuration() {
-        return 1000;
+        return 600;
     }
 
     enum State {
@@ -128,6 +128,14 @@ public class eMain extends TaskScript implements LoopingScript {
         this.ctx.updateStatus("  eAnglerFisherZaros  ");
         this.ctx.updateStatus("----------------------");
 
+
+/*        if (ctx.inventory.populate().filter(307, 13431).isEmpty()) {
+            status = "Rod/worms not found";
+            ctx.updateStatus("Rod/worms not found");
+            ctx.updateStatus("Stopping script");
+            ctx.stopScript();
+        }*/
+
     }
 
     @Override
@@ -141,7 +149,7 @@ public class eMain extends TaskScript implements LoopingScript {
             } else {
                 status = "Browsing for anglerfish tele";
                 if (teleporter.teleportStringPath("Skilling", "Fishing: Anglerfish")) {
-                    ctx.onCondition(() -> ANGLER.containsPoint(ctx.players.getLocal().getLocation()), 2400);
+                    ctx.onCondition(() -> ANGLER_BANK.containsPoint(ctx.players.getLocal().getLocation()), 2400);
                     ctx.game.tab(Game.Tab.INVENTORY);
                     firstTeleport = true;
                     fishingState = false;
@@ -196,6 +204,14 @@ public class eMain extends TaskScript implements LoopingScript {
         if (ctx.pathing.energyLevel() > 30 && !ctx.pathing.running()) {
             ctx.pathing.running(true);
         }
+
+        if (ctx.inventory.populate().filter(13431).isEmpty()) {
+            status = "Out of worms";
+            ctx.updateStatus("Our of worms");
+            ctx.updateStatus("Stopping script");
+            ctx.stopScript();
+        }
+
     }
 
     public void fishingAnglers() {
