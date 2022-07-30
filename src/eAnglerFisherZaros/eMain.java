@@ -55,7 +55,6 @@ public class eMain extends TaskScript implements LoopingScript {
             new WorldPoint(1844, 3782, 0),
             new WorldPoint(1837, 3796, 0));
 
-
     //vars
     private Teleporter teleporter;
     private long startTime = 0L;
