@@ -33,7 +33,7 @@ import simple.robot.utils.WorldArea;
                 "<li>Supported <b>spirit flakes</b> in inventory;</li>" +
                 "<li>Included <b>anti-ban</b> option!</li></ul>",
         discord = "Esmaabi#5752",
-        name = "eAnglerFisherZaros", servers = { "Zaros" }, version = "3.1")
+        name = "eAnglerFisherZaros", servers = { "Zaros" }, version = "3.2")
 
 public class eMain extends TaskScript implements LoopingScript {
     //coordinates
@@ -47,13 +47,13 @@ public class eMain extends TaskScript implements LoopingScript {
             new WorldPoint(1815, 3798, 0));
 
     private static final WorldArea ANGLER_SPOT = new WorldArea(
-            new WorldPoint(1815, 3784, 0),
+            new WorldPoint(1815, 3796, 0),
             new WorldPoint(1815, 3778, 0),
             new WorldPoint(1805, 3778, 0),
-            new WorldPoint(1805, 3770, 0),
-            new WorldPoint(1809, 3768, 0),
-            new WorldPoint(1840, 3768, 0),
-            new WorldPoint(1847, 3786, 0));
+            new WorldPoint(1805, 3767, 0),
+            new WorldPoint(1835, 3767, 0),
+            new WorldPoint(1844, 3782, 0),
+            new WorldPoint(1837, 3796, 0));
 
 
     //vars
@@ -63,9 +63,11 @@ public class eMain extends TaskScript implements LoopingScript {
     private long startingSkillExp;
     private int count;
     static String status = null;
-    boolean firstTeleport;
-    boolean fishingState;
+    boolean firstTeleport = false;
+    boolean fishingState = false;
     boolean runningState = false;
+    boolean scriptStarted = false;
+    boolean equipmentCheck;
     public static State playerState;
     private long lastAnimation = -1;
 
@@ -111,107 +113,122 @@ public class eMain extends TaskScript implements LoopingScript {
         count = 0;
         firstTeleport = false;
         fishingState = false;
+        runningState = false;
+        scriptStarted = false;
         playerState = State.WAITING;
 
-        eAnglerFisherZaros.eGui.eGuiDialogueMode();
-        if (eAnglerFisherZaros.eGui.returnMode == 0) {
-            playerState = State.ANTIBAN_ACTIVATED;
-            ctx.updateStatus(currentTime() + " Anti-ban enabled");
-        } else if (eAnglerFisherZaros.eGui.returnMode == 1) {
-            playerState = State.ANTIBAN_DEACTIVATED;
-            ctx.updateStatus(currentTime() + " Anti-ban disabled");
+        if (!ctx.inventory.populate().filter(13431).isEmpty() && !ctx.inventory.populate().filter(307).isEmpty()) {
+            status = "Rod/worms found";
+            equipmentCheck = true;
+        } else if (!ctx.inventory.populate().filter(13431).isEmpty() && !ctx.equipment.populate().filter(22844).isEmpty()) {
+            status = "Rod/worms found";
+            equipmentCheck = true;
         } else {
-            playerState = State.WAITING;
+            status = "Rod/worms not found";
+            equipmentCheck = false;
+            ctx.updateStatus("Stopping script");
+            ctx.updateStatus("Rod/worms not found");
+            ctx.sleep(4000);
+            ctx.stopScript();
+        }
+
+        if (equipmentCheck) {
+            eAnglerFisherZaros.eGui.eGuiDialogueMode();
+            if (eAnglerFisherZaros.eGui.returnMode == 0) {
+                playerState = State.ANTIBAN_ACTIVATED;
+                ctx.updateStatus(currentTime() + " Anti-ban enabled");
+                scriptStarted = true;
+            } else if (eAnglerFisherZaros.eGui.returnMode == 1) {
+                playerState = State.ANTIBAN_DEACTIVATED;
+                ctx.updateStatus(currentTime() + " Anti-ban disabled");
+                scriptStarted = true;
+            } else {
+                playerState = State.WAITING;
+                scriptStarted = false;
+            }
         }
 
         this.ctx.updateStatus("----------------------");
         this.ctx.updateStatus("  eAnglerFisherZaros  ");
         this.ctx.updateStatus("----------------------");
 
-
-/*        if (ctx.inventory.populate().filter(307, 13431).isEmpty()) {
-            status = "Rod/worms not found";
-            ctx.updateStatus("Rod/worms not found");
-            ctx.updateStatus("Stopping script");
-            ctx.stopScript();
-        }*/
-
     }
 
     @Override
     public void onProcess() {
-        if (!firstTeleport) {
+        if (scriptStarted) {
+            if (!firstTeleport) {
+                if (!teleporter.opened()) {
+                    status = "First teleport to fishing spot";
+                    ctx.magic.castSpellOnce("Skilling Teleport");
 
-            if (!teleporter.opened()) {
-                status = "First teleport to fishing spot";
-                ctx.magic.castSpellOnce("Skilling Teleport");
-
+                } else {
+                    status = "Browsing for anglerfish tele";
+                    if (teleporter.teleportStringPath("Skilling", "Fishing: Anglerfish")) {
+                        ctx.onCondition(() -> ANGLER_BANK.containsPoint(ctx.players.getLocal().getLocation()), 2400);
+                        if (ctx.game.tab(Game.Tab.INVENTORY)) {
+                            firstTeleport = true;
+                            fishingState = false;
+                            status = "Setup completed";
+                        }
+                    }
+                }
             } else {
-                status = "Browsing for anglerfish tele";
-                if (teleporter.teleportStringPath("Skilling", "Fishing: Anglerfish")) {
-                    ctx.onCondition(() -> ANGLER_BANK.containsPoint(ctx.players.getLocal().getLocation()), 2400);
-                    ctx.game.tab(Game.Tab.INVENTORY);
-                    firstTeleport = true;
-                    fishingState = false;
-                    status = "Setup completed";
+
+                if (ANGLER.containsPoint(ctx.players.getLocal().getLocation())) {
+                    if (ANGLER_BANK.containsPoint(ctx.players.getLocal().getLocation()) && !fishingState) {
+                        bankingFish();
+                    } else if (ANGLER_BANK.containsPoint(ctx.players.getLocal().getLocation()) && fishingState) {
+                        status = "Running to fishing area";
+                        if (!ctx.pathing.inMotion()) {
+                            takingStepsRandom();
+                        }
+                    } else if (ANGLER_SPOT.containsPoint(ctx.players.getLocal().getLocation()) && fishingState) {
+                        if (ctx.inventory.populate().population() == 28) {
+                            if (playerState == State.ANTIBAN_ACTIVATED) {
+                                teleportingToBank();
+                            } else {
+                                teleportingToBankInstant();
+                            }
+                        } else if (ctx.inventory.populate().population() < 28) {
+                            if (ctx.players.getLocal().getAnimation() != 622 && (System.currentTimeMillis() > (lastAnimation + 4000))) {
+                                if (playerState == State.ANTIBAN_ACTIVATED && !runningState) {
+                                    fishingAnglers();
+                                } else if (runningState || playerState == State.ANTIBAN_DEACTIVATED) {
+                                    fishingAnglersInstant();
+                                }
+                            } else if (ctx.players.getLocal().getAnimation() == 622) {
+                                lastAnimation = System.currentTimeMillis();
+                            }
+                        }
+                    }
+
+                } else {
+                    ctx.updateStatus(currentTime() + " Not in Anglers area");
+                    ctx.updateStatus(currentTime() + " Stopping script");
+                    ctx.stopScript();
                 }
             }
 
-        } else {
+            if (ctx.combat.getSpecialAttackPercentage() == 100
+                    && ctx.equipment.populate().filter("Dragon harpoon").population() == 1
+                    && ctx.players.getLocal().getAnimation() == 622) {
+                ctx.sleep(randomSleeping(1200, 24000));
+                ctx.combat.toggleSpecialAttack(true);
+            }
 
-            if (ANGLER.containsPoint(ctx.players.getLocal().getLocation())) {
-                if (ANGLER_BANK.containsPoint(ctx.players.getLocal().getLocation()) && !fishingState) {
-                    bankingFish();
-                } else if (ANGLER_BANK.containsPoint(ctx.players.getLocal().getLocation()) && fishingState) {
-                    status = "Running to fishing area";
-                    if (!ctx.pathing.inMotion()) {
-                        takingStepsRandom();
-                    }
-                } else if (ANGLER_SPOT.containsPoint(ctx.players.getLocal().getLocation()) && fishingState) {
-                    if (ctx.inventory.populate().population() == 28) {
-                        if (playerState == State.ANTIBAN_ACTIVATED) {
-                            teleportingToBank();
-                        } else {
-                            teleportingToBankInstant();
-                        }
-                    } else if (ctx.inventory.populate().population() < 28) {
-                        if (ctx.players.getLocal().getAnimation() != 622 && (System.currentTimeMillis() > (lastAnimation + 4000))) {
-                            if (playerState == State.ANTIBAN_ACTIVATED && !runningState) {
-                                fishingAnglers();
-                            } else if (runningState || playerState == State.ANTIBAN_DEACTIVATED) {
-                                fishingAnglersInstant();
-                            }
-                        } else if (ctx.players.getLocal().getAnimation() == 622) {
-                            lastAnimation = System.currentTimeMillis();
-                        }
-                    }
-                }
+            if (ctx.pathing.energyLevel() > 30 && !ctx.pathing.running()) {
+                ctx.pathing.running(true);
+            }
 
-            } else {
-                ctx.updateStatus(currentTime() + " Not in Anglers area");
-                ctx.updateStatus(currentTime() + " Stopping script");
+            if (ctx.inventory.populate().filter(13431).isEmpty()) {
+                status = "Out of worms";
+                ctx.updateStatus("Our of worms");
+                ctx.updateStatus("Stopping script");
                 ctx.stopScript();
             }
-        }
 
-        if (ctx.combat.getSpecialAttackPercentage() == 100
-                && ctx.equipment.populate().filter("Dragon harpoon").population() == 1
-                && ctx.players.getLocal().getAnimation() == 622) {
-            ctx.sleep(randomSleeping(1200, 24000));
-            ctx.combat.toggleSpecialAttack(true);
         }
-
-        if (ctx.pathing.energyLevel() > 30 && !ctx.pathing.running()) {
-            ctx.pathing.running(true);
-        }
-
-        if (ctx.inventory.populate().filter(13431).isEmpty()) {
-            status = "Out of worms";
-            ctx.updateStatus("Our of worms");
-            ctx.updateStatus("Stopping script");
-            ctx.stopScript();
-        }
-
     }
 
     public void fishingAnglers() {
@@ -279,25 +296,18 @@ public class eMain extends TaskScript implements LoopingScript {
         int min = 1;
         int randomNum = ThreadLocalRandom.current().nextInt(min, max + 1);
         if (randomNum == 1) {
-            status = "Taking steps using road 1";
             ctx.pathing.step(1827, 3771);
         } else if (randomNum == 2) {
-            status = "Taking steps using road 2";
             ctx.pathing.step(1836, 3772);
         } else if (randomNum == 3) {
-            status = "Taking steps using road 3";
             ctx.pathing.step(1834, 3770);
         } else if (randomNum == 4) {
-            status = "Taking steps using road 4";
             ctx.pathing.step(1839, 3776);
         } else if (randomNum == 5) {
-            status = "Taking steps using road 5";
             ctx.pathing.step(1824, 3772);
         } else if (randomNum == 6) {
-            status = "Taking steps using road 6";
             ctx.pathing.step(1830, 3771);
         } else {
-            status = "Taking steps using road 7";
             ctx.pathing.step(1826, 3771);
         }
     }
@@ -308,25 +318,30 @@ public class eMain extends TaskScript implements LoopingScript {
         ctx.sleep(sleepingTime);
         status = "Teleporting to bank";
         if (!ANGLER_BANK.containsPoint(ctx.players.getLocal().getLocation())) {
-                ctx.game.tab(Game.Tab.MAGIC);
+            if (ctx.game.tab(Game.Tab.MAGIC)) {
                 SimpleWidget homeTeleport = ctx.widgets.getWidget(218, 6);//home teleport
                 if (homeTeleport.click("Fishing: Anglerfish", "Home Teleport")) {
                     ctx.onCondition(() -> ANGLER_BANK.containsPoint(ctx.players.getLocal().getLocation()), 2400);
-                    ctx.game.tab(Game.Tab.INVENTORY);
-                    fishingState = false;
-                    runningState = false;
+                    if (ctx.game.tab(Game.Tab.INVENTORY)) {
+                        fishingState = false;
+                        runningState = false;
+                    }
                 }
+            }
         }
     }
 
     public void teleportingToBankInstant() {
         status = "Teleporting to bank";
-        SimpleWidget homeTeleport = ctx.widgets.getWidget(218, 6);//home teleport
-        ctx.game.tab(Game.Tab.MAGIC);
-        homeTeleport.click("Fishing: Anglerfish", "Home Teleport");
-        ctx.onCondition(() -> ANGLER_BANK.containsPoint(ctx.players.getLocal().getLocation()), 2400);
-        ctx.game.tab(Game.Tab.INVENTORY);
-        fishingState = false;
+        if (ctx.game.tab(Game.Tab.MAGIC)) {
+            SimpleWidget homeTeleport = ctx.widgets.getWidget(218, 6);//home teleport
+            if (homeTeleport.click("Fishing: Anglerfish", "Home Teleport")) {
+                ctx.onCondition(() -> ANGLER_BANK.containsPoint(ctx.players.getLocal().getLocation()), 2400);
+                if (ctx.game.tab(Game.Tab.INVENTORY)) {
+                    fishingState = false;
+                }
+            }
+        }
     }
 
     @Override
