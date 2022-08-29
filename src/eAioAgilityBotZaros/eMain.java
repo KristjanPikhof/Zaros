@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
                 "Supported courses:<br>" +
                 "Al-Kharid, Varrock, Canifis, Seers,<br> Pollnivneach, Rellekka, Ardougne",
         discord = "Esmaabi#5752",
-        name = "eAioAgilityBotZaros", servers = { "Zaros" }, version = "1")
+        name = "eAioAgilityBotZaros", servers = { "Zaros" }, version = "2")
 
 public class eMain extends TaskScript  implements LoopingScript {
 
@@ -120,7 +120,7 @@ public class eMain extends TaskScript  implements LoopingScript {
 
         //counting marks of grace method
         SimpleItem ringOfWealth = ctx.equipment.getEquippedItem(SimpleEquipment.EquipmentSlot.RING);
-        if (ringOfWealth != null && ringOfWealth.getName().contains("Ring of wealth")) {
+        if (ringOfWealth != null && ringOfWealth.getName().contains("wealth")) {
             ringOfWealthEqupped = true;
             totalMarks = 0;
             ctx.updateStatus("Ring of wealth equipped");
