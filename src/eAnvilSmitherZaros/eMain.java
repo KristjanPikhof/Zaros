@@ -30,7 +30,7 @@ import java.util.stream.Stream;
         "<li>Zoom out to <b>see anvil & bank chest</b>;</li>" +
         "<li>Included random sleeping times!</li></ul>",
         discord = "Esmaabi#5752",
-        name = "eAnvilSmitherZaros", servers = { "Zaros" }, version = "0.3")
+        name = "eAnvilSmitherZaros", servers = { "Zaros" }, version = "0.4")
 
 public class eMain extends TaskScript implements LoopingScript {
 
@@ -123,21 +123,18 @@ public class eMain extends TaskScript implements LoopingScript {
             ctx.updateStatus("Making " + nameOfItem);
             smithingWidget = 10;
             barsInInventory = 0;
-            sleepTime = randomSleeping(1200, 12800);
             botStarted = true;
         } else if (eGui.returnItem == "Platebody") {
             nameOfItem = "platebodies";
             ctx.updateStatus("Making " + nameOfItem);
             smithingWidget = 22;
             barsInInventory = 4;
-            sleepTime = randomSleeping(1200, 6400);
             botStarted = true;
         } else if (eGui.returnItem == "Dart tips") {
             nameOfItem = "dart tips";
             ctx.updateStatus("Making " + nameOfItem);
             smithingWidget = 29;
             barsInInventory = 0;
-            sleepTime = randomSleeping(1200, 12800);
             botStarted = true;
         } else {
             status = "Waiting for GUI options";
@@ -201,6 +198,7 @@ public class eMain extends TaskScript implements LoopingScript {
     public void openingBank() {
         SimpleObject bankChest = ctx.objects.populate().filter("Bank chest").filterHasAction("Last-preset").nearest().next();
         if (bankChest != null && bankChest.validateInteractable() && !ctx.pathing.inMotion()) {
+            sleepTime = randomSleeping(1200, 10200);
             status = "Sleeping to bank (" + sleepTime + "ms)";
             ctx.sleep(sleepTime);
             status = "Refilling supplies";
@@ -212,6 +210,7 @@ public class eMain extends TaskScript implements LoopingScript {
     public void openingBankVarrock() {
         SimpleObject bankBooth = ctx.objects.populate().filter("Bank booth").nearest(bankBoothVarrock).next();
         if (bankBooth != null && bankBooth.validateInteractable() && !ctx.pathing.inMotion()) {
+            sleepTime = randomSleeping(1200, 10200);
             status = "Sleeping to bank (" + sleepTime + "ms)";
             ctx.sleep(sleepTime);
             status = "Refilling supplies";
