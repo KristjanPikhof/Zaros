@@ -3,8 +3,10 @@ package eChinBot;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.text.DecimalFormat;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.TimeUnit;
- 
+
 import net.runelite.api.coords.WorldPoint;
 import simple.hooks.filters.SimpleSkills.Skills;
 import simple.hooks.scripts.Category;
@@ -17,7 +19,7 @@ import simple.robot.script.Script;
 import simple.robot.utils.ScriptUtils;
 
 @ScriptManifest(author = "Nate/Trester/Esmaabi", category = Category.HUNTER, description = "Start near chins with boxes in inv, rework by Trester & Esmaabi",
-discord = "Nathan#6809 | Loreen#4582 | Esmaabi#5752", name = "Amazing Chins v3", servers = { "Zaros, OSRSPS" }, version = "3")
+discord = "Nathan#6809 | Loreen#4582 | Esmaabi#5752", name = "Amazing Chins v3", servers = { "Zaros, OSRSPS" }, version = "3.1")
 
 public class eMain extends Script{
 
@@ -30,7 +32,11 @@ public int chinsGained;
 public long startTime;
 public long timeRan;
 
-private WorldPoint[] locs;
+private WorldPoint[] locs = null;
+
+public static String currentTime() {
+		return LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
+	}
 
 @Override
 public void paint(Graphics g) {
@@ -44,11 +50,22 @@ public void paint(Graphics g) {
     g.drawString("Exp: " + formatter.format(this.getGainedXP()) + " (" + formatter.format(ScriptUtils.getValuePerHour(startTime, System.currentTimeMillis(), getGainedXP())) + ")", 7, 275);
     g.drawString("Chins: " + formatter.format(this.getGainedChins()) + " (" + formatter.format(ScriptUtils.getValuePerHour(startTime, System.currentTimeMillis(), getGainedChins())) + ")", 7, 290);
 
+/*	if(locs != null) {
+		ctx.paint.drawTileMatrix(g, locs, Color.CYAN);
+	}*/
+
 }
 
 @Override
-public void onChatMessage(ChatMessage arg0) {
-	// TODO Auto-generated method stub
+public void onChatMessage(ChatMessage m) {
+	if (m.getMessage() != null) {
+		String message = m.getMessage().toLowerCase();
+		if (message.contains(ctx.players.getLocal().getName().toLowerCase())) {
+			ctx.updateStatus(currentTime() + " Someone asked for you");
+			ctx.updateStatus(currentTime() + " Stopping script");
+			ctx.stopScript();
+		}
+	}
 }
 
 @Override
@@ -70,17 +87,17 @@ public void onExecute() {
 
 @Override
 public void onProcess() {
-	if(ctx.players.getLocal().getAnimation() != -1){
+	if(ctx.players.getLocal().getAnimation() != -1) {
 		ctx.onCondition(() -> ctx.players.getLocal().getAnimation() == -1, 200,10);
 		ctx.sleep(500);
 		return;
 	}
 	//ctx.updateStatus("Scanning for Traps");
 	SimpleGroundItem floorTrap = ctx.groundItems.populate().filter(BOX_TRAP_ITEM).nearest().next();
-	if(floorTrap != null && floorTrap.validateInteractable()){
+	if(floorTrap != null && floorTrap.validateInteractable() && !ctx.pathing.inMotion()) {
 		//ctx.updateStatus("Picking up broken trap");
 		int trapAm = ctx.inventory.populate().filter(BOX_TRAP_ITEM).population();
-		if(floorTrap.click("lay")){
+		if(floorTrap.click("lay")) {
 			ctx.sleep(1000);
 			ctx.onCondition(() -> ctx.inventory.populate().filter(BOX_TRAP_ITEM).population() > trapAm,250,5);
 		}
@@ -91,14 +108,14 @@ public void onProcess() {
 		//ctx.updateStatus("Trap is in inventory");
 		SimpleItem invTrap = ctx.inventory.populate().filter(BOX_TRAP_ITEM).next();
 
-		if(invTrap != null && trapTile != null){
+		if(invTrap != null && trapTile != null) {
 
-			if(!ctx.players.getLocal().getLocation().equals(trapTile)){
+			if(!ctx.players.getLocal().getLocation().equals(trapTile)) {
 				//ctx.updateStatus("Walking to available trap spot");
 				ctx.pathing.step(trapTile.getX(),trapTile.getY());
 				ctx.onCondition(()-> ctx.players.getLocal().getLocation().equals(trapTile),200,10);
 			}
-			if(ctx.players.getLocal().getLocation().equals(trapTile)){
+			if(ctx.players.getLocal().getLocation().equals(trapTile)) {
 				//ctx.updateStatus("Setting up trap");
 				setupTrap(invTrap, trapTile);
 			}
@@ -108,7 +125,7 @@ public void onProcess() {
 	} else {
 	//	//ctx.updateStatus("Scanning ground objects for traps");
 		SimpleObject trap = ctx.objects.populate().filter(9382,9385,9384).filter(t -> objectInLocation(t.getLocation())).next();
-		if(trap != null && trap.validateInteractable()){
+		if(trap != null && trap.validateInteractable() && !ctx.pathing.inMotion()){
 		//	//ctx.updateStatus("Resetting traps");
 			int chins = getChinCount();
 			if(trap.click("Reset")){
