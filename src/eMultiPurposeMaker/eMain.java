@@ -27,7 +27,7 @@ import java.util.stream.Stream;
         + "2. You must setup item you want to make as <b>Space</b> action;<br>"
         + "3. Start with fresh inventory only material and tool in it;<br>"
         + "4. Start with knife or chisel depending on starting mode.<br>", discord = "Esmaabi#5752",
-        name = "eMultiPurposeMakerZaros", servers = { "Zaros" }, version = "0.1")
+        name = "eMultiPurposeMakerZaros", servers = { "Zaros" }, version = "0.2")
 
 public class eMain extends Script{
 
@@ -71,18 +71,18 @@ public class eMain extends Script{
         if (eGui.returnMode == 0) {
             playerState = State.STARTED;
             toolName = "chisel";
-            taskName = "Crafting";
+            taskName = "Chisel";
             skillName = SimpleSkills.Skills.CRAFTING;
-            ctx.updateStatus(currentTime() + " crafting task started");
+            ctx.updateStatus(currentTime() + " task with chisel started");
             if (playerState == State.STARTED) {
                 eGui.eGuiDialogueItem();
             }
         } else if (eGui.returnMode == 1) {
             playerState = State.STARTED;
             toolName = "knife";
-            taskName = "Fletching";
+            taskName = "Knife";
             skillName = SimpleSkills.Skills.FLETCHING;
-            ctx.updateStatus(currentTime() + " fletching task started");
+            ctx.updateStatus(currentTime() + " task with knife started");
             if (playerState == State.STARTED) {
                 eGui.eGuiDialogueItem();
             }
@@ -94,6 +94,11 @@ public class eMain extends Script{
         itemNameStarted = storedItemId();
 
         //stats for paint
+        if (!ctx.inventory.populate().filter(itemNameStarted).filter(1601, 1609, 1611, 411, 413, 1607, 1613, 1605, 1603, 1615, 6573).isEmpty()) {
+            ctx.updateStatus(currentTime() + " cut gems found = flethcing");
+            skillName = SimpleSkills.Skills.FLETCHING;
+        }
+
         this.startingSkillLevel = this.ctx.skills.realLevel(skillName);
         this.startingSkillExp = this.ctx.skills.experience(skillName);
 
